@@ -1,0 +1,17 @@
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/tests'],
+  testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+  transform: {
+    '^.+\\.ts$': 'ts-jest',
+  },
+  coverageDirectory: 'coverage',
+  collectCoverageFrom: [
+    'controllers/**/*.ts',
+    'services/**/*.ts',
+    'middleware/**/*.ts',
+    '!**/*.d.ts',
+  ],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts', '<rootDir>/tests/test-setup.ts'],
+};

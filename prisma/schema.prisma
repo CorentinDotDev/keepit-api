@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  password String
+  notes    Note[]
+  webhooks Webhook[]
+
+  @@map("users")
+}
+
+model Note {
+  id         Int        @id @default(autoincrement())
+  title      String
+  content    String
+  color      String?
+  isPinned   Boolean    @default(false)
+  isShared   Boolean    @default(false)
+  userId     Int
+  user       User       @relation(fields: [userId], references: [id])
+  checkboxes Checkbox[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@map("notes")
+}
+
+model Checkbox {
+  id      Int     @id @default(autoincrement())
+  label   String
+  checked Boolean @default(false)
+  noteId  Int
+  note    Note    @relation(fields: [noteId], references: [id])
+
+  @@map("checkboxes")
+}
+
+model Webhook {
+  id     Int    @id @default(autoincrement())
+  action String?
+  url    String?
+  userId Int
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("webhooks")
+}
