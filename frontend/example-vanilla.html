@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes API - Exemple Vanilla JS</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .auth-form {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 50px auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        button.danger {
+            background: #dc3545;
+        }
+
+        button.danger:hover {
+            background: #c82333;
+        }
+
+        button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        button.success {
+            background: #28a745;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .notes-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .note-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .note-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .pin-indicator {
+            background: #ffc107;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .note-content {
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .note-meta {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .checkboxes {
+            margin-bottom: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .checkbox-item input {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- En-tête -->
+        <div class="header">
+            <h1>Notes API - Exemple Vanilla JS</h1>
+            <div id="user-info" class="hidden">
+                <span id="user-email"></span>
+                <button onclick="logout()" style="margin-left: 10px;">Déconnexion</button>
+            </div>
+        </div>
+
+        <!-- Messages d'alerte -->
+        <div id="alert-container"></div>
+
+        <!-- Formulaire de connexion -->
+        <div id="auth-section" class="auth-form">
+            <h2>Connexion / Inscription</h2>
+            <form id="auth-form" onsubmit="handleAuth(event)">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Mot de passe (min 6 caractères):</label>
+                    <input type="password" id="password" required minlength="6">
+                </div>
+                <button type="submit" id="auth-button">Se connecter</button>
+            </form>
+            <p style="margin-top: 15px; text-align: center; color: #666;">
+                Si le compte n'existe pas, il sera créé automatiquement.
+            </p>
+        </div>
+
+        <!-- Interface principale -->
+        <div id="main-section" class="hidden">
+            <div class="main-content">
+                <!-- Formulaire de création de note -->
+                <div class="card">
+                    <h2>Créer une note</h2>
+                    <form id="note-form" onsubmit="createNote(event)">
+                        <div class="form-group">
+                            <label for="note-title">Titre (max 200 caractères):</label>
+                            <input type="text" id="note-title" required maxlength="200">
+                        </div>
+                        <div class="form-group">
+                            <label for="note-content">Contenu (max 10000 caractères):</label>
+                            <textarea id="note-content" rows="5" required maxlength="10000"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="note-color">Couleur:</label>
+                            <input type="color" id="note-color" value="#ffffff">
+                        </div>
+                        <button type="submit" class="success" id="create-button">Créer la note</button>
+                    </form>
+
+                    <hr style="margin: 30px 0;">
+
+                    <h3>Gestion des webhooks</h3>
+                    <div id="webhook-section">
+                        <div class="form-group">
+                            <label for="webhook-action">Action:</label>
+                            <select id="webhook-action">
+                                <option value="note_created">Note créée</option>
+                                <option value="note_updated">Note modifiée</option>
+                                <option value="note_deleted">Note supprimée</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="webhook-url">URL du webhook:</label>
+                            <input type="url" id="webhook-url" placeholder="https://example.com/webhook">
+                        </div>
+                        <button onclick="createWebhook()" style="margin-bottom: 15px;">Créer webhook</button>
+                        
+                        <div id="webhooks-list">
+                            <strong>Webhooks configurés:</strong>
+                            <div id="webhooks-container" style="margin-top: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Liste des notes -->
+                <div class="card">
+                    <h2>Mes notes <span id="notes-count">(0)</span></h2>
+                    <div id="loading" class="loading">Chargement...</div>
+                    <div id="notes-container" class="notes-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Importer le client API -->
+    <script src="api-client.js"></script>
+    
+    <script>
+        // Instance globale du client API
+        const apiClient = new NotesAPIClient();
+        let currentUser = null;
+        let notes = [];
+        let webhooks = [];
+
+        // === GESTION DE L'AUTHENTIFICATION ===
+
+        async function handleAuth(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const button = document.getElementById('auth-button');
+            
+            button.disabled = true;
+            button.textContent = 'Connexion...';
+            clearAlert();
+
+            try {
+                // Tentative de connexion
+                try {
+                    const result = await apiClient.login(email, password);
+                    showSuccess('Connexion réussie !');
+                    currentUser = { email, token: result.token };
+                } catch (loginError) {
+                    // Si la connexion échoue, on essaie l'inscription
+                    if (loginError.status === 404) {
+                        await apiClient.register(email, password);
+                        const result = await apiClient.login(email, password);
+                        showSuccess('Compte créé et connexion réussie !');
+                        currentUser = { email, token: result.token };
+                    } else {
+                        throw loginError;
+                    }
+                }
+
+                // Afficher l'interface principale
+                showMainInterface();
+                await Promise.all([loadNotes(), loadWebhooks()]);
+
+            } catch (error) {
+                showError(`Erreur d'authentification: ${error.message}`);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Se connecter';
+            }
+        }
+
+        function logout() {
+            apiClient.logout();
+            currentUser = null;
+            notes = [];
+            webhooks = [];
+            
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('main-section').classList.add('hidden');
+            document.getElementById('user-info').classList.add('hidden');
+            document.getElementById('auth-form').reset();
+            clearAlert();
+        }
+
+        function showMainInterface() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('main-section').classList.remove('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('user-email').textContent = currentUser.email;
+        }
+
+        // === GESTION DES NOTES ===
+
+        async function loadNotes() {
+            const loading = document.getElementById('loading');
+            const container = document.getElementById('notes-container');
+            
+            loading.classList.remove('hidden');
+            
+            try {
+                notes = await apiClient.getNotes();
+                renderNotes();
+            } catch (error) {
+                showError(`Erreur chargement des notes: ${error.message}`);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notes-container');
+            const count = document.getElementById('notes-count');
+            
+            count.textContent = `(${notes.length})`;
+            
+            if (notes.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Aucune note. Créez votre première note !</p>';
+                return;
+            }
+
+            // Trier les notes (épinglées en premier)
+            const sortedNotes = [...notes].sort((a, b) => b.isPinned - a.isPinned);
+            
+            container.innerHTML = sortedNotes.map(note => `
+                <div class="note-item" style="background-color: ${note.color || '#ffffff'}">
+                    <div class="note-header">
+                        <h3 class="note-title">${escapeHtml(note.title)}</h3>
+                        ${note.isPinned ? '<div class="pin-indicator">📌</div>' : ''}
+                    </div>
+                    
+                    <div class="note-meta">
+                        Créé le ${new Date(note.createdAt).toLocaleDateString('fr-FR')}
+                        ${note.updatedAt !== note.createdAt ? 
+                            `• Modifié le ${new Date(note.updatedAt).toLocaleDateString('fr-FR')}` : ''}
+                    </div>
+                    
+                    <div class="note-content">${escapeHtml(note.content)}</div>
+                    
+                    ${note.checkboxes && note.checkboxes.length > 0 ? `
+                        <div class="checkboxes">
+                            <strong>Tâches:</strong>
+                            ${note.checkboxes.map(checkbox => `
+                                <div class="checkbox-item">
+                                    <input type="checkbox" 
+                                           ${checkbox.checked ? 'checked' : ''} 
+                                           onchange="toggleCheckbox(${checkbox.id}, ${checkbox.checked})">
+                                    <span style="${checkbox.checked ? 'text-decoration: line-through; color: #666;' : ''}">
+                                        ${escapeHtml(checkbox.label)}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="note-actions">
+                        <button onclick="togglePin(${note.id}, ${note.isPinned})" 
+                                class="${note.isPinned ? 'warning' : ''}" 
+                                style="font-size: 12px;">
+                            ${note.isPinned ? 'Détacher' : 'Épingler'}
+                        </button>
+                        <button onclick="deleteNote(${note.id})" 
+                                class="danger" 
+                                style="font-size: 12px;">
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function createNote(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('note-title').value;
+            const content = document.getElementById('note-content').value;
+            const color = document.getElementById('note-color').value;
+            const button = document.getElementById('create-button');
+            
+            button.disabled = true;
+            button.textContent = 'Création...';
+            
+            try {
+                const newNote = await apiClient.createNote({
+                    title,
+                    content,
+                    color,
+                    isPinned: false,
+                    checkboxes: []
+                });
+                
+                notes.push(newNote);
+                renderNotes();
+                document.getElementById('note-form').reset();
+                document.getElementById('note-color').value = '#ffffff';
+                showSuccess('Note créée avec succès !');
+                
+            } catch (error) {
+                showError(`Erreur création note: ${error.message}`);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Créer la note';
+            }
+        }
+
+        async function deleteNote(noteId) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cette note ?')) {
+                return;
+            }
+            
+            try {
+                await apiClient.deleteNote(noteId);
+                notes = notes.filter(note => note.id !== noteId);
+                renderNotes();
+                showSuccess('Note supprimée avec succès !');
+            } catch (error) {
+                showError(`Erreur suppression: ${error.message}`);
+            }
+        }
+
+        async function togglePin(noteId, currentPinned) {
+            try {
+                const updatedNote = await apiClient.updateNote(noteId, {
+                    isPinned: !currentPinned
+                });
+                
+                notes = notes.map(note => 
+                    note.id === noteId ? updatedNote : note
+                );
+                renderNotes();
+                
+            } catch (error) {
+                showError(`Erreur modification: ${error.message}`);
+            }
+        }
+
+        async function toggleCheckbox(checkboxId, currentChecked) {
+            try {
+                await apiClient.updateCheckbox(checkboxId, !currentChecked);
+                await loadNotes(); // Recharger pour voir les changements
+            } catch (error) {
+                showError(`Erreur checkbox: ${error.message}`);
+            }
+        }
+
+        // === GESTION DES WEBHOOKS ===
+
+        async function loadWebhooks() {
+            try {
+                webhooks = await apiClient.getWebhooks();
+                renderWebhooks();
+            } catch (error) {
+                showError(`Erreur chargement webhooks: ${error.message}`);
+            }
+        }
+
+        function renderWebhooks() {
+            const container = document.getElementById('webhooks-container');
+            
+            if (webhooks.length === 0) {
+                container.innerHTML = '<p style="color: #666; font-style: italic;">Aucun webhook configuré</p>';
+                return;
+            }
+
+            container.innerHTML = webhooks.map(webhook => `
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                    <div><strong>${webhook.action}</strong></div>
+                    <div style="font-size: 12px; color: #666; word-break: break-all;">${webhook.url}</div>
+                </div>
+            `).join('');
+        }
+
+        async function createWebhook() {
+            const action = document.getElementById('webhook-action').value;
+            const url = document.getElementById('webhook-url').value;
+            
+            if (!url) {
+                showError('Veuillez saisir une URL de webhook');
+                return;
+            }
+            
+            try {
+                const newWebhook = await apiClient.createWebhook(action, url);
+                webhooks.push(newWebhook);
+                renderWebhooks();
+                document.getElementById('webhook-url').value = '';
+                showSuccess('Webhook créé avec succès !');
+            } catch (error) {
+                showError(`Erreur création webhook: ${error.message}`);
+            }
+        }
+
+        // === UTILITAIRES ===
+
+        function showError(message) {
+            showAlert(message, 'error');
+        }
+
+        function showSuccess(message) {
+            showAlert(message, 'success');
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+            
+            container.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                    <button onclick="clearAlert()" style="float: right; background: none; border: none; cursor: pointer;">×</button>
+                </div>
+            `;
+            
+            // Auto-masquer après 5 secondes
+            setTimeout(clearAlert, 5000);
+        }
+
+        function clearAlert() {
+            document.getElementById('alert-container').innerHTML = '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // === INITIALISATION ===
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Notes API Example - Vanilla JS');
+            console.log('API Base URL:', apiClient.baseURL);
+            console.log('Documentation Swagger: http://localhost:3000/api-docs');
+        });
+    </script>
+</body>
+</html>

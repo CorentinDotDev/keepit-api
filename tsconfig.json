@@ -13,12 +13,12 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "typeRoots": ["./types", "./node_modules/@types"]
   },
   "include": [
     "**/*.ts"
   ],
-  "typeRoots": ["./types", "./node_modules/@types"],
   "exclude": [
     "node_modules",
     "dist",

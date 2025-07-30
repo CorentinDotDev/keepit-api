@@ -86,6 +86,14 @@ router.use(authenticate);
  *               isShared: false
  *               userId: 1
  *               checkboxes: []
+ *       404:
+ *         description: Note non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Note non trouvée"
  *       401:
  *         description: Non autorisé
  */
@@ -161,22 +169,28 @@ router.use(authenticate);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               content:
- *                 type: string
- *               color:
- *                 type: string
- *               isPinned:
- *                 type: boolean
- *               isShared:
- *                 type: boolean
- *           example:
- *             title: "Titre modifié"
- *             content: "Contenu modifié"
- *             isPinned: false
+ *             $ref: '#/components/schemas/NoteUpdateRequest'
+ *           examples:
+ *             simple_update:
+ *               summary: "Mise à jour simple sans checkboxes"
+ *               value:
+ *                 title: "Titre modifié"
+ *                 content: "Contenu modifié"
+ *                 isPinned: true
+ *                 isShared: false
+ *             with_checkboxes:
+ *               summary: "Mise à jour avec checkboxes"
+ *               value:
+ *                 title: "Note avec nouvelles tâches"
+ *                 content: "Contenu mis à jour"
+ *                 color: "#ff6b6b"
+ *                 isPinned: false
+ *                 isShared: true
+ *                 checkboxes:
+ *                   - label: "Nouvelle tâche 1"
+ *                     checked: false
+ *                   - label: "Nouvelle tâche 2"
+ *                     checked: true
  *     responses:
  *       200:
  *         description: Note mise à jour avec succès
@@ -184,6 +198,14 @@ router.use(authenticate);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Note'
+ *       404:
+ *         description: Note non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Note non trouvée"
  *       500:
  *         description: Erreur lors de la mise à jour
  *         content:
@@ -218,6 +240,14 @@ router.use(authenticate);
  *               $ref: '#/components/schemas/Success'
  *             example:
  *               message: "Supprimé"
+ *       404:
+ *         description: Note non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Note non trouvée"
  *       500:
  *         description: Erreur lors de la suppression
  *         content:

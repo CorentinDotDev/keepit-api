@@ -45,10 +45,25 @@ export class NoteService {
     color?: string;
     isPinned?: boolean;
     isShared?: boolean;
+    checkboxes?: Array<{ id?: number; label: string; checked: boolean }>;
   }) {
+    const { checkboxes, ...data } = noteData;
+    
     return await prisma.note.update({
       where: { id },
-      data: noteData
+      data: {
+        ...data,
+        ...(checkboxes && {
+          checkboxes: {
+            deleteMany: { noteId: id },
+            create: checkboxes.map((cb) => ({
+              label: cb.label,
+              checked: cb.checked
+            }))
+          }
+        })
+      },
+      include: { checkboxes: true }
     });
   }
 

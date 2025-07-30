@@ -1,4 +1,5 @@
 import swaggerJsdoc from 'swagger-jsdoc';
+import { VALIDATION_LIMITS } from './constants';
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -37,6 +38,7 @@ const options: swaggerJsdoc.Options = {
             email: {
               type: 'string',
               format: 'email',
+              maxLength: VALIDATION_LIMITS.EMAIL_MAX_LENGTH,
               description: 'Email de l\'utilisateur',
             },
           },
@@ -50,10 +52,12 @@ const options: swaggerJsdoc.Options = {
             },
             title: {
               type: 'string',
+              maxLength: VALIDATION_LIMITS.TITLE_MAX_LENGTH,
               description: 'Titre de la note',
             },
             content: {
               type: 'string',
+              maxLength: VALIDATION_LIMITS.CONTENT_MAX_LENGTH,
               description: 'Contenu de la note',
             },
             color: {
@@ -147,11 +151,12 @@ const options: swaggerJsdoc.Options = {
             email: {
               type: 'string',
               format: 'email',
+              maxLength: VALIDATION_LIMITS.EMAIL_MAX_LENGTH,
               description: 'Email de l\'utilisateur',
             },
             password: {
               type: 'string',
-              minLength: 6,
+              minLength: VALIDATION_LIMITS.PASSWORD_MIN_LENGTH,
               description: 'Mot de passe de l\'utilisateur',
             },
           },
@@ -162,10 +167,12 @@ const options: swaggerJsdoc.Options = {
           properties: {
             title: {
               type: 'string',
+              maxLength: VALIDATION_LIMITS.TITLE_MAX_LENGTH,
               description: 'Titre de la note',
             },
             content: {
               type: 'string',
+              maxLength: VALIDATION_LIMITS.CONTENT_MAX_LENGTH,
               description: 'Contenu de la note',
             },
             color: {
@@ -188,18 +195,59 @@ const options: swaggerJsdoc.Options = {
             },
           },
         },
+        NoteUpdateRequest: {
+          type: 'object',
+          properties: {
+            title: {
+              type: 'string',
+              maxLength: VALIDATION_LIMITS.TITLE_MAX_LENGTH,
+              description: 'Titre de la note',
+            },
+            content: {
+              type: 'string',
+              maxLength: VALIDATION_LIMITS.CONTENT_MAX_LENGTH,
+              description: 'Contenu de la note',
+            },
+            color: {
+              type: 'string',
+              description: 'Couleur de la note',
+            },
+            isPinned: {
+              type: 'boolean',
+              description: 'Note épinglée',
+            },
+            isShared: {
+              type: 'boolean',
+              description: 'Note partagée',
+            },
+            checkboxes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'integer', description: 'ID de la checkbox (optionnel pour nouvelles checkboxes)' },
+                  label: { type: 'string', description: 'Texte de la checkbox' },
+                  checked: { type: 'boolean', description: 'État de la checkbox' },
+                },
+                required: ['label', 'checked'],
+              },
+              description: 'Liste des checkboxes (remplace complètement la liste existante)',
+            },
+          },
+        },
         WebhookRequest: {
           type: 'object',
+          required: ['action', 'url'],
           properties: {
             action: {
               type: 'string',
               enum: ['note_created', 'note_updated', 'note_deleted'],
-              description: 'Action déclenchant le webhook',
+              description: 'Action déclenchant le webhook. Valeurs possibles: note_created, note_updated, note_deleted',
             },
             url: {
               type: 'string',
               format: 'uri',
-              description: 'URL du webhook',
+              description: 'URL du webhook (HTTPS recommandé). Ne peut pas être une URL interne (localhost, 127.0.0.1, 192.168.x.x, 10.x.x.x, 172.16-31.x.x)',
             },
           },
         },
@@ -229,6 +277,74 @@ const options: swaggerJsdoc.Options = {
               description: 'Token JWT d\'authentification',
             },
           },
+        },
+        AuthResponse: {
+          type: 'object',
+          properties: {
+            accessToken: {
+              type: 'string',
+              description: 'Token JWT d\'accès',
+            },
+            refreshToken: {
+              type: 'string',
+              description: 'Token de rafraîchissement',
+            },
+            expiresIn: {
+              type: 'string',
+              description: 'Durée de validité du token d\'accès',
+            },
+          },
+        },
+        RefreshRequest: {
+          type: 'object',
+          required: ['refreshToken'],
+          properties: {
+            refreshToken: {
+              type: 'string',
+              description: 'Token de rafraîchissement',
+            },
+          },
+        },
+        WebhookPayload: {
+          type: 'object',
+          description: 'Payload envoyé au webhook lors du déclenchement',
+          properties: {
+            action: {
+              type: 'string',
+              enum: ['note_created', 'note_updated', 'note_deleted'],
+              description: 'Action qui a déclenché le webhook',
+            },
+            note: {
+              $ref: '#/components/schemas/Note',
+              description: 'Données de la note concernée',
+            },
+            userId: {
+              type: 'integer',
+              description: 'ID de l\'utilisateur propriétaire',
+            },
+            timestamp: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Horodatage de l\'événement',
+            },
+          },
+          example: {
+            action: 'note_created',
+            note: {
+              id: 1,
+              title: 'Ma nouvelle note',
+              content: 'Contenu de la note',
+              color: '#ffffff',
+              isPinned: false,
+              isShared: false,
+              userId: 1,
+              checkboxes: [],
+              createdAt: '2023-12-01T10:00:00.000Z',
+              updatedAt: '2023-12-01T10:00:00.000Z'
+            },
+            userId: 1,
+            timestamp: '2023-12-01T10:00:00.000Z'
+          }
         },
       },
     },

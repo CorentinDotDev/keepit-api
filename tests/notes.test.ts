@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import app from './app';
 import { AuthService } from '../services/auth.service';
 import { NoteService } from '../services/note.service';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_STATUS } from '../constants';
 
 describe('Notes Endpoints', () => {
   let authToken: string;
@@ -26,7 +27,7 @@ describe('Notes Endpoints', () => {
       const response = await request(app)
         .get('/notes')
         .set('Authorization', `Bearer ${authToken}`)
-        .expect(200);
+        .expect(HTTP_STATUS.OK);
 
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body).toHaveLength(1);
@@ -36,14 +37,14 @@ describe('Notes Endpoints', () => {
     it('should return 401 without authentication', async () => {
       await request(app)
         .get('/notes')
-        .expect(401);
+        .expect(HTTP_STATUS.UNAUTHORIZED);
     });
 
     it('should return empty array when no notes exist', async () => {
       const response = await request(app)
         .get('/notes')
         .set('Authorization', `Bearer ${authToken}`)
-        .expect(200);
+        .expect(HTTP_STATUS.OK);
 
       expect(response.body).toEqual([]);
     });
@@ -60,7 +61,7 @@ describe('Notes Endpoints', () => {
       const response = await request(app)
         .get(`/notes/${note.id}`)
         .set('Authorization', `Bearer ${authToken}`)
-        .expect(200);
+        .expect(HTTP_STATUS.OK);
 
       expect(response.body.id).toBe(note.id);
       expect(response.body.title).toBe('Specific Note');
@@ -70,9 +71,9 @@ describe('Notes Endpoints', () => {
       const response = await request(app)
         .get('/notes/999')
         .set('Authorization', `Bearer ${authToken}`)
-        .expect(200);
+        .expect(HTTP_STATUS.NOT_FOUND);
 
-      expect(response.body).toBeNull();
+      expect(response.body.error).toBe(ERROR_MESSAGES.NOTE_NOT_FOUND);
     });
   });
 
@@ -93,7 +94,7 @@ describe('Notes Endpoints', () => {
         .post('/notes')
         .set('Authorization', `Bearer ${authToken}`)
         .send(noteData)
-        .expect(200);
+        .expect(HTTP_STATUS.OK);
 
       expect(response.body.title).toBe('New Note');
       expect(response.body.content).toBe('New content');
@@ -111,7 +112,7 @@ describe('Notes Endpoints', () => {
         .post('/notes')
         .set('Authorization', `Bearer ${authToken}`)
         .send(noteData)
-        .expect(200);
+        .expect(HTTP_STATUS.OK);
 
       expect(response.body.title).toBe('Simple Note');
       expect(response.body.content).toBe('Simple content');
@@ -130,7 +131,7 @@ describe('Notes Endpoints', () => {
         .post('/notes')
         .set('Authorization', `Bearer ${authToken}`)
         .send(noteData)
-        .expect(200);
+        .expect(HTTP_STATUS.OK);
 
       expect(response.body.title).toBe('Minimal Note');
       expect(response.body.content).toBe('Minimal content');
@@ -148,7 +149,7 @@ describe('Notes Endpoints', () => {
       await request(app)
         .post('/notes')
         .send(noteData)
-        .expect(401);
+        .expect(HTTP_STATUS.UNAUTHORIZED);
     });
   });
 
@@ -171,14 +172,114 @@ describe('Notes Endpoints', () => {
         .patch(`/notes/${createdNote.id}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send(updateData)
-        .expect(200);
+        .expect(HTTP_STATUS.OK);
 
       expect(response.body.title).toBe('Updated Title');
       expect(response.body.content).toBe('Updated content');
       expect(response.body.isPinned).toBe(true);
     });
 
-    it('should return 500 for non-existent note', async () => {
+    it('should update note with checkboxes successfully', async () => {
+      // Créer une note avec des checkboxes
+      const createdNote = await NoteService.createNote({
+        title: 'Note avec checkboxes',
+        content: 'Contenu original',
+        userId,
+        checkboxes: [
+          { label: 'Ancienne tâche 1', checked: false },
+          { label: 'Ancienne tâche 2', checked: true }
+        ]
+      });
+
+      const updateData = {
+        title: 'Note mise à jour',
+        content: 'Contenu mis à jour',
+        isPinned: true,
+        isShared: false,
+        checkboxes: [
+          { label: 'Nouvelle tâche 1', checked: true },
+          { label: 'Nouvelle tâche 2', checked: false },
+          { label: 'Nouvelle tâche 3', checked: true }
+        ]
+      };
+
+      const response = await request(app)
+        .patch(`/notes/${createdNote.id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(updateData)
+        .expect(HTTP_STATUS.OK);
+
+      expect(response.body.title).toBe('Note mise à jour');
+      expect(response.body.content).toBe('Contenu mis à jour');
+      expect(response.body.isPinned).toBe(true);
+      expect(response.body.isShared).toBe(false);
+      expect(response.body.checkboxes).toHaveLength(3);
+      expect(response.body.checkboxes[0].label).toBe('Nouvelle tâche 1');
+      expect(response.body.checkboxes[0].checked).toBe(true);
+      expect(response.body.checkboxes[1].label).toBe('Nouvelle tâche 2');
+      expect(response.body.checkboxes[1].checked).toBe(false);
+      expect(response.body.checkboxes[2].label).toBe('Nouvelle tâche 3');
+      expect(response.body.checkboxes[2].checked).toBe(true);
+    });
+
+    it('should update note and remove all checkboxes when empty array provided', async () => {
+      // Créer une note avec des checkboxes
+      const createdNote = await NoteService.createNote({
+        title: 'Note avec checkboxes',
+        content: 'Contenu',
+        userId,
+        checkboxes: [
+          { label: 'Tâche à supprimer', checked: false }
+        ]
+      });
+
+      const updateData = {
+        title: 'Note sans checkboxes',
+        checkboxes: []
+      };
+
+      const response = await request(app)
+        .patch(`/notes/${createdNote.id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(updateData)
+        .expect(HTTP_STATUS.OK);
+
+      expect(response.body.title).toBe('Note sans checkboxes');
+      expect(response.body.checkboxes).toHaveLength(0);
+    });
+
+    it('should update note properties without affecting checkboxes when checkboxes not provided', async () => {
+      // Créer une note avec des checkboxes
+      const createdNote = await NoteService.createNote({
+        title: 'Note originale',
+        content: 'Contenu original',
+        userId,
+        checkboxes: [
+          { label: 'Tâche conservée', checked: true }
+        ]
+      });
+
+      const updateData = {
+        title: 'Titre mis à jour',
+        content: 'Contenu mis à jour',
+        isPinned: true
+      };
+
+      const response = await request(app)
+        .patch(`/notes/${createdNote.id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(updateData)
+        .expect(HTTP_STATUS.OK);
+
+      expect(response.body.title).toBe('Titre mis à jour');
+      expect(response.body.content).toBe('Contenu mis à jour');
+      expect(response.body.isPinned).toBe(true);
+      expect(response.body.checkboxes).toHaveLength(1);
+      expect(response.body.checkboxes[0].label).toBe('Tâche conservée');
+      expect(response.body.checkboxes[0].checked).toBe(true);
+    });
+
+    it('should return 404 for non-existent note', async () => {
       const updateData = {
         title: 'Updated Title'
       };
@@ -187,7 +288,7 @@ describe('Notes Endpoints', () => {
         .patch('/notes/999999')
         .set('Authorization', `Bearer ${authToken}`)
         .send(updateData)
-        .expect(500);
+        .expect(HTTP_STATUS.NOT_FOUND);
     });
   });
 
@@ -204,25 +305,25 @@ describe('Notes Endpoints', () => {
       const response = await request(app)
         .delete(`/notes/${createdNote.id}`)
         .set('Authorization', `Bearer ${authToken}`)
-        .expect(200);
+        .expect(HTTP_STATUS.OK);
 
-      expect(response.body.message).toBe('Supprimé');
+      expect(response.body.message).toBe(SUCCESS_MESSAGES.NOTE_DELETED);
 
       const deletedNote = await NoteService.findNoteById(createdNote.id);
       expect(deletedNote).toBeNull();
     });
 
-    it('should return 500 for non-existent note', async () => {
+    it('should return 404 for non-existent note', async () => {
       await request(app)
         .delete('/notes/999999')
         .set('Authorization', `Bearer ${authToken}`)
-        .expect(500);
+        .expect(HTTP_STATUS.NOT_FOUND);
     });
 
     it('should return 401 without authentication', async () => {
       await request(app)
         .delete('/notes/1')
-        .expect(401);
+        .expect(HTTP_STATUS.UNAUTHORIZED);
     });
   });
 
@@ -243,7 +344,7 @@ describe('Notes Endpoints', () => {
         .patch(`/notes/checkbox/${checkboxId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({ checked: true })
-        .expect(200);
+        .expect(HTTP_STATUS.OK);
 
       expect(response.body.id).toBe(checkboxId);
       expect(response.body.checked).toBe(true);
@@ -266,7 +367,7 @@ describe('Notes Endpoints', () => {
         .patch(`/notes/checkbox/${checkboxId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({ checked: false })
-        .expect(200);
+        .expect(HTTP_STATUS.OK);
 
       expect(response.body.id).toBe(checkboxId);
       expect(response.body.checked).toBe(false);
@@ -278,9 +379,9 @@ describe('Notes Endpoints', () => {
         .patch('/notes/checkbox/999999')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ checked: true })
-        .expect(404);
+        .expect(HTTP_STATUS.NOT_FOUND);
 
-      expect(response.body.error).toBe('Checkbox non trouvée');
+      expect(response.body.error).toBe(ERROR_MESSAGES.CHECKBOX_NOT_FOUND);
     });
 
     it('should return 404 for checkbox belonging to another user', async () => {
@@ -302,16 +403,16 @@ describe('Notes Endpoints', () => {
         .patch(`/notes/checkbox/${checkboxId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({ checked: true })
-        .expect(404);
+        .expect(HTTP_STATUS.NOT_FOUND);
 
-      expect(response.body.error).toBe('Checkbox non trouvée');
+      expect(response.body.error).toBe(ERROR_MESSAGES.CHECKBOX_NOT_FOUND);
     });
 
     it('should return 401 without authentication', async () => {
       await request(app)
         .patch('/notes/checkbox/1')
         .send({ checked: true })
-        .expect(401);
+        .expect(HTTP_STATUS.UNAUTHORIZED);
     });
   });
 });
