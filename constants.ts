@@ -67,6 +67,14 @@ export const ERROR_MESSAGES = {
   INTERNAL_URL_FORBIDDEN: "URL interne non autorisée",
   WEBHOOK_CREATION_ERROR: "Erreur création webhook",
   WEBHOOK_NOT_FOUND: "Webhook non trouvé",
+
+  // Sharing errors
+  EMAILS_REQUIRED: "Liste d'emails requise",
+  SHARE_ERROR: "Erreur lors du partage",
+  FETCH_SHARED_ERROR: "Erreur lors de la récupération des notes partagées",
+  UNSHARE_ERROR: "Erreur lors du retrait du partage",
+  LEAVE_SHARED_ERROR: "Erreur lors de la sortie du partage",
+  NOT_SHARED_WITH_USER: "Cette note n'est pas partagée avec vous",
 } as const;
 
 // Success messages
@@ -74,6 +82,10 @@ export const SUCCESS_MESSAGES = {
   REGISTRATION_SUCCESS: "Inscription réussie",
   NOTE_DELETED: "Supprimé",
   WEBHOOK_DELETED: "Webhook supprimé",
+  NOTE_SHARED: "Note partagée avec succès",
+  NOTE_UNSHARED: "Partage retiré avec succès",
+  NOTE_UNSHARED_FROM_EMAIL: "Partage retiré pour cet email",
+  LEFT_SHARED_NOTE: "Vous avez quitté le partage de cette note",
 } as const;
 
 // Blocked internal networks for SSRF protection

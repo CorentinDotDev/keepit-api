@@ -17,6 +17,6 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     req.user = decoded;
     next();
   } catch {
-    return res.status(HTTP_STATUS.FORBIDDEN).json({ error: ERROR_MESSAGES.INVALID_TOKEN });
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: ERROR_MESSAGES.INVALID_TOKEN });
   }
 }

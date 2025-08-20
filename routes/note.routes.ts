@@ -6,7 +6,12 @@ import {
   getNoteById,
   getNotes,
   updateNote,
-  updateCheckbox
+  updateCheckbox,
+  shareNote,
+  getSharedNotes,
+  unshareNote,
+  unshareNoteFromEmail,
+  leaveSharedNote
 } from "../controllers/note.controller";
 
 const router = Router();
@@ -323,11 +328,308 @@ router.use(authenticate);
  *               error: "Erreur mise à jour checkbox"
  */
 
+/**
+ * @swagger
+ * /notes/{id}/share:
+ *   post:
+ *     summary: Partager une note avec des utilisateurs
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la note à partager
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [emails]
+ *             properties:
+ *               emails:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: email
+ *                 description: Liste des adresses emails avec qui partager la note
+ *           example:
+ *             emails: ["user1@example.com", "user2@example.com"]
+ *     responses:
+ *       200:
+ *         description: Note partagée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Note partagée avec succès"
+ *                 shares:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       noteId:
+ *                         type: integer
+ *                       email:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Liste d'emails requise"
+ *       404:
+ *         description: Note non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Note non trouvée"
+ *       500:
+ *         description: Erreur lors du partage
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Erreur lors du partage"
+ */
+
+/**
+ * @swagger
+ * /notes/shared:
+ *   get:
+ *     summary: Récupérer les notes partagées avec l'utilisateur
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des notes partagées
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/Note'
+ *                   - type: object
+ *                     properties:
+ *                       sharedBy:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           email:
+ *                             type: string
+ *                       sharedAt:
+ *                         type: string
+ *                         format: date-time
+ *             example:
+ *               - id: 1
+ *                 title: "Note partagée"
+ *                 content: "Contenu de la note partagée"
+ *                 color: "#ffffff"
+ *                 isPinned: false
+ *                 isShared: true
+ *                 userId: 2
+ *                 checkboxes: []
+ *                 sharedBy:
+ *                   id: 2
+ *                   email: "owner@example.com"
+ *                 sharedAt: "2023-12-01T10:00:00.000Z"
+ *       500:
+ *         description: Erreur lors de la récupération
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Erreur lors de la récupération des notes partagées"
+ */
+
+/**
+ * @swagger
+ * /notes/{id}/share:
+ *   delete:
+ *     summary: Retirer tout le partage d'une note
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la note dont retirer le partage
+ *     responses:
+ *       200:
+ *         description: Partage retiré avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Partage retiré avec succès"
+ *                 remainingShares:
+ *                   type: integer
+ *                   example: 0
+ *       404:
+ *         description: Note non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Note non trouvée"
+ *       403:
+ *         description: Seul le propriétaire peut retirer le partage
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Accès non autorisé"
+ */
+
+/**
+ * @swagger
+ * /notes/{id}/share/{email}:
+ *   delete:
+ *     summary: Retirer le partage d'une note pour un email spécifique
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la note
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *         description: Email de l'utilisateur à qui retirer l'accès
+ *     responses:
+ *       200:
+ *         description: Partage retiré pour cet email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Partage retiré pour cet email"
+ *                 email:
+ *                   type: string
+ *                   example: "user@example.com"
+ *                 remainingShares:
+ *                   type: integer
+ *                   example: 1
+ *       404:
+ *         description: Note non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Note non trouvée"
+ *       403:
+ *         description: Seul le propriétaire peut retirer le partage
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Accès non autorisé"
+ */
+
+/**
+ * @swagger
+ * /notes/{id}/leave:
+ *   delete:
+ *     summary: Se retirer du partage d'une note
+ *     description: Permet à un utilisateur de se retirer d'une note qui lui a été partagée. Seuls les utilisateurs ayant accès via un partage peuvent utiliser cet endpoint.
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la note dont se retirer
+ *     responses:
+ *       200:
+ *         description: L'utilisateur s'est retiré du partage avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Vous avez quitté le partage de cette note"
+ *       404:
+ *         description: Note non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Note non trouvée"
+ *       403:
+ *         description: Cette note n'est pas partagée avec l'utilisateur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Cette note n'est pas partagée avec vous"
+ *       500:
+ *         description: Erreur lors de la sortie du partage
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Erreur lors de la sortie du partage"
+ */
+
 router.get("/", getNotes);
+router.get("/shared", getSharedNotes);
 router.get("/:id", getNoteById);
 router.post("/", createNote);
+router.post("/:id/share", shareNote);
 router.patch("/:id", updateNote);
 router.patch("/checkbox/:checkboxId", updateCheckbox);
 router.delete("/:id", deleteNote);
+router.delete("/:id/share", unshareNote);
+router.delete("/:id/share/:email", unshareNoteFromEmail);
+router.delete("/:id/leave", leaveSharedNote);
 
 export default router;

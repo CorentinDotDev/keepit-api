@@ -22,17 +22,18 @@ model User {
 }
 
 model Note {
-  id         Int        @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   title      String
   content    String
   color      String?
-  isPinned   Boolean    @default(false)
-  isShared   Boolean    @default(false)
+  isPinned   Boolean     @default(false)
+  isShared   Boolean     @default(false)
   userId     Int
-  user       User       @relation(fields: [userId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
   checkboxes Checkbox[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  shares     NoteShare[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   @@map("notes")
 }
@@ -66,4 +67,15 @@ model RefreshToken {
   createdAt DateTime @default(now())
 
   @@map("refresh_tokens")
+}
+
+model NoteShare {
+  id        Int      @id @default(autoincrement())
+  noteId    Int
+  email     String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([noteId, email])
+  @@map("note_shares")
 }
