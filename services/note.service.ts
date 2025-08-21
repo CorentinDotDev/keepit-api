@@ -77,6 +77,23 @@ export class NoteService {
     });
   }
 
+  static async updateNotePinnedStatus(id: number, isPinned: boolean) {
+    // Utiliser une transaction pour mettre à jour sans modifier updatedAt
+    return await prisma.$transaction(async (tx) => {
+      const currentNote = await tx.note.findUnique({ where: { id } });
+      if (!currentNote) throw new Error('Note not found');
+      
+      // Mettre à jour avec la date originale pour éviter le changement d'updatedAt
+      return await tx.note.update({
+        where: { id },
+        data: { 
+          isPinned,
+          updatedAt: currentNote.updatedAt // Préserver la date originale
+        }
+      });
+    });
+  }
+
   static async deleteNote(id: number) {
     await prisma.checkbox.deleteMany({ where: { noteId: id } });
     return await prisma.note.delete({ where: { id } });

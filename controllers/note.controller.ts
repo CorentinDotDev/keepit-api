@@ -115,6 +115,39 @@ export async function updateNote(req: Request, res: Response) {
   }
 }
 
+export async function toggleNotePin(req: Request, res: Response) {
+  const { id } = req.params;
+  const userId = req.user.id;
+  const userEmail = req.user.email;
+
+  try {
+    const existingNote = await NoteService.findNoteById(Number(id));
+    
+    if (!existingNote) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: ERROR_MESSAGES.NOTE_NOT_FOUND });
+    }
+    
+    // Vérifier si l'utilisateur a accès à la note (propriétaire ou partagée)
+    const hasAccess = await NoteService.hasAccessToNote(Number(id), userId, userEmail);
+    if (!hasAccess) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({ error: ERROR_MESSAGES.ACCESS_DENIED });
+    }
+
+    // Inverser le statut d'épinglage actuel
+    const newPinnedStatus = !existingNote.isPinned;
+    
+    // Mettre à jour uniquement le statut d'épinglage sans modifier updatedAt
+    await NoteService.updateNotePinnedStatus(Number(id), newPinnedStatus);
+    
+    // Récupérer la note complète avec les relations pour la réponse
+    const noteWithRelations = await NoteService.findNoteById(Number(id));
+    res.json(noteWithRelations);
+  } catch (error) {
+    console.error('Pin toggle error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: ERROR_MESSAGES.UPDATE_ERROR });
+  }
+}
+
 export async function deleteNote(req: Request, res: Response) {
   const { id } = req.params;
   const userId = req.user.id;

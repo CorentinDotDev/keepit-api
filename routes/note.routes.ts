@@ -11,7 +11,8 @@ import {
   getSharedNotes,
   unshareNote,
   unshareNoteFromEmail,
-  leaveSharedNote
+  leaveSharedNote,
+  toggleNotePin
 } from "../controllers/note.controller";
 
 const router = Router();
@@ -620,12 +621,79 @@ router.use(authenticate);
  *               error: "Erreur lors de la sortie du partage"
  */
 
+/**
+ * @swagger
+ * /notes/{id}/pin:
+ *   patch:
+ *     summary: Basculer l'épinglage d'une note
+ *     description: Inverse automatiquement l'état d'épinglage d'une note (épinglée → désépinglée ou vice versa) sans modifier la date de modification (updatedAt). Aucun body requis.
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la note dont basculer l'épinglage
+ *     responses:
+ *       200:
+ *         description: Statut d'épinglage basculé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Note'
+ *             examples:
+ *               pinned_to_unpinned:
+ *                 summary: "Note désépinglée"
+ *                 value:
+ *                   id: 1
+ *                   title: "Ma note"
+ *                   content: "Contenu"
+ *                   isPinned: false
+ *                   updatedAt: "2023-12-01T10:00:00.000Z"
+ *               unpinned_to_pinned:
+ *                 summary: "Note épinglée"
+ *                 value:
+ *                   id: 1
+ *                   title: "Ma note"
+ *                   content: "Contenu"
+ *                   isPinned: true
+ *                   updatedAt: "2023-12-01T10:00:00.000Z"
+ *       404:
+ *         description: Note non trouvée
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Note non trouvée"
+ *       403:
+ *         description: Accès non autorisé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Accès non autorisé"
+ *       500:
+ *         description: Erreur lors de la modification
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Erreur mise à jour"
+ */
+
 router.get("/", getNotes);
 router.get("/shared", getSharedNotes);
 router.get("/:id", getNoteById);
 router.post("/", createNote);
 router.post("/:id/share", shareNote);
 router.patch("/:id", updateNote);
+router.patch("/:id/pin", toggleNotePin);
 router.patch("/checkbox/:checkboxId", updateCheckbox);
 router.delete("/:id", deleteNote);
 router.delete("/:id/share", unshareNote);
