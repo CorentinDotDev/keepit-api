@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { NoteService } from "../services/note.service";
-import { WebhookService } from "../services/webhook.service";
+import { triggerWebhook } from "../utils/triggerWebhook";
 import { isValidTitle, isValidContent, isValidColor } from "../utils/validation";
 import { WEBHOOK_ACTIONS, ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_STATUS } from "../constants";
 
@@ -205,10 +205,10 @@ export async function createNoteFromTemplate(req: Request, res: Response) {
     );
 
     // Déclencher les webhooks pour la création de note
-    await WebhookService.triggerWebhooks(userId, WEBHOOK_ACTIONS.NOTE_CREATED, note);
+    await triggerWebhook(userId, WEBHOOK_ACTIONS.NOTE_CREATED, note);
 
     res.status(HTTP_STATUS.CREATED).json(note);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur lors de la création de note depuis template:", error);
     
     if (error.message === 'Template non trouvé' || error.message === 'Accès non autorisé au template') {
@@ -230,7 +230,7 @@ export async function convertNoteToTemplate(req: Request, res: Response) {
 
     const template = await NoteService.convertNoteToTemplate(Number(noteId), userId);
     res.json(template);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur lors de la conversion en template:", error);
     
     if (error.message === 'Note non trouvée ou accès non autorisé') {
@@ -252,7 +252,7 @@ export async function convertTemplateToNote(req: Request, res: Response) {
 
     const note = await NoteService.convertTemplateToNote(Number(templateId), userId);
     res.json(note);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur lors de la conversion en note:", error);
     
     if (error.message === 'Template non trouvé ou accès non autorisé') {
