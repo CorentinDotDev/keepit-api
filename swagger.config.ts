@@ -28,6 +28,11 @@ Cette API supporte deux types d'authentification :
   - \`update_notes\`: Modifier les notes
   - \`delete_notes\`: Supprimer les notes
   - \`share_notes\`: Partager les notes
+  - \`read_templates\`: Lire les templates
+  - \`create_templates\`: Créer des templates
+  - \`update_templates\`: Modifier les templates
+  - \`delete_templates\`: Supprimer les templates
+  - \`use_templates\`: Utiliser des templates pour créer des notes
 
 ### Opérations réservées au JWT uniquement :
 - Gestion des webhooks
@@ -402,7 +407,7 @@ Les clés API permettent un contrôle granulaire des permissions :
               type: 'array',
               items: {
                 type: 'string',
-                enum: ['create_notes', 'read_notes', 'update_notes', 'delete_notes', 'share_notes'],
+                enum: ['create_notes', 'read_notes', 'update_notes', 'delete_notes', 'share_notes', 'read_templates', 'create_templates', 'update_templates', 'delete_templates', 'use_templates'],
               },
               description: 'Liste des permissions accordées',
             },
@@ -437,7 +442,7 @@ Les clés API permettent un contrôle granulaire des permissions :
               type: 'array',
               items: {
                 type: 'string',
-                enum: ['create_notes', 'read_notes', 'update_notes', 'delete_notes', 'share_notes'],
+                enum: ['create_notes', 'read_notes', 'update_notes', 'delete_notes', 'share_notes', 'read_templates', 'create_templates', 'update_templates', 'delete_templates', 'use_templates'],
               },
               minItems: 1,
               description: 'Liste des permissions à accorder',
@@ -527,6 +532,120 @@ Les clés API permettent un contrôle granulaire des permissions :
                 $ref: '#/components/schemas/PermissionItem',
               },
               description: 'Liste des permissions disponibles',
+            },
+          },
+        },
+        Template: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'ID unique du template',
+            },
+            title: {
+              type: 'string',
+              maxLength: VALIDATION_LIMITS.TITLE_MAX_LENGTH,
+              description: 'Titre du template',
+            },
+            content: {
+              type: 'string',
+              maxLength: VALIDATION_LIMITS.CONTENT_MAX_LENGTH,
+              description: 'Contenu du template',
+            },
+            color: {
+              type: 'string',
+              description: 'Couleur du template (format hex)',
+              nullable: true,
+            },
+            isTemplate: {
+              type: 'boolean',
+              description: 'Toujours true pour un template',
+              default: true,
+            },
+            userId: {
+              type: 'integer',
+              description: 'ID de l\'utilisateur propriétaire',
+            },
+            checkboxes: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/Checkbox',
+              },
+              description: 'Checkboxes du template',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Date de création',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Date de dernière modification',
+            },
+          },
+        },
+        TemplateRequest: {
+          type: 'object',
+          required: ['title', 'content'],
+          properties: {
+            title: {
+              type: 'string',
+              maxLength: VALIDATION_LIMITS.TITLE_MAX_LENGTH,
+              description: 'Titre du template',
+            },
+            content: {
+              type: 'string',
+              maxLength: VALIDATION_LIMITS.CONTENT_MAX_LENGTH,
+              description: 'Contenu du template',
+            },
+            color: {
+              type: 'string',
+              description: 'Couleur du template',
+            },
+            checkboxes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  label: { type: 'string' },
+                  checked: { type: 'boolean' },
+                },
+                required: ['label', 'checked'],
+              },
+              description: 'Checkboxes du template',
+            },
+          },
+        },
+        TemplateUpdateRequest: {
+          type: 'object',
+          properties: {
+            title: {
+              type: 'string',
+              maxLength: VALIDATION_LIMITS.TITLE_MAX_LENGTH,
+              description: 'Titre du template',
+            },
+            content: {
+              type: 'string',
+              maxLength: VALIDATION_LIMITS.CONTENT_MAX_LENGTH,
+              description: 'Contenu du template',
+            },
+            color: {
+              type: 'string',
+              description: 'Couleur du template',
+            },
+            checkboxes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'integer', description: 'ID de la checkbox (optionnel pour nouvelles checkboxes)' },
+                  label: { type: 'string', description: 'Texte de la checkbox' },
+                  checked: { type: 'boolean', description: 'État de la checkbox' },
+                },
+                required: ['label', 'checked'],
+              },
+              description: 'Liste des checkboxes (remplace complètement la liste existante)',
             },
           },
         },

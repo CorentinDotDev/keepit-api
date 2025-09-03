@@ -129,6 +129,16 @@ function getPermissionLabel(permission: ApiKeyPermission): string {
       return "Supprimer les notes";
     case ApiKeyPermission.SHARE_NOTES:
       return "Partager les notes";
+    case ApiKeyPermission.READ_TEMPLATES:
+      return "Lire les templates";
+    case ApiKeyPermission.CREATE_TEMPLATES:
+      return "Créer des templates";
+    case ApiKeyPermission.UPDATE_TEMPLATES:
+      return "Modifier les templates";
+    case ApiKeyPermission.DELETE_TEMPLATES:
+      return "Supprimer les templates";
+    case ApiKeyPermission.USE_TEMPLATES:
+      return "Utiliser les templates";
     default:
       return permission;
   }

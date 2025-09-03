@@ -29,6 +29,7 @@ model Note {
   color      String?
   isPinned   Boolean     @default(false)
   isShared   Boolean     @default(false)
+  isTemplate Boolean     @default(false)
   order      Int         @default(0)
   userId     Int
   user       User        @relation(fields: [userId], references: [id])

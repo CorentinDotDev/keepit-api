@@ -3,7 +3,10 @@ import prisma from "../prisma/client";
 export class NoteService {
   static async findNotesByUserId(userId: number) {
     return await prisma.note.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        isTemplate: false // Exclure les templates des requêtes classiques
+      },
       include: { 
         checkboxes: true,
         shares: true
@@ -26,6 +29,7 @@ export class NoteService {
     content: string;
     color?: string;
     isPinned?: boolean;
+    isTemplate?: boolean;
     userId: number;
     checkboxes?: Array<{ label: string; checked: boolean }>;
   }) {
@@ -54,6 +58,7 @@ export class NoteService {
       color?: string;
       isPinned?: boolean;
       isShared?: boolean;
+      isTemplate?: boolean;
       checkboxes?: Array<{ id?: number; label: string; checked: boolean }>;
     }
   ) {
@@ -281,6 +286,110 @@ export class NoteService {
       );
       
       return await Promise.all(updates);
+    });
+  }
+
+  // === MÉTHODES POUR LES TEMPLATES ===
+
+  static async findTemplatesByUserId(userId: number) {
+    return await prisma.note.findMany({
+      where: { 
+        userId,
+        isTemplate: true // Seulement les templates
+      },
+      include: { 
+        checkboxes: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  static async findTemplateById(id: number) {
+    return await prisma.note.findUnique({
+      where: { 
+        id,
+        isTemplate: true // Vérifier que c'est bien un template
+      },
+      include: { 
+        checkboxes: true
+      },
+    });
+  }
+
+  static async createNoteFromTemplate(templateId: number, userId: number, overrides: {
+    title?: string;
+    content?: string;
+    color?: string;
+  } = {}) {
+    const template = await this.findTemplateById(templateId);
+    
+    if (!template) {
+      throw new Error('Template non trouvé');
+    }
+
+    // Vérifier que l'utilisateur a accès au template
+    if (template.userId !== userId) {
+      throw new Error('Accès non autorisé au template');
+    }
+
+    // Créer une nouvelle note basée sur le template
+    const noteData = {
+      title: overrides.title || template.title,
+      content: overrides.content || template.content,
+      color: overrides.color || template.color || undefined,
+      isPinned: false, // Les notes créées depuis un template ne sont pas épinglées par défaut
+      isTemplate: false, // Ce n'est pas un template
+      userId: userId,
+      checkboxes: template.checkboxes.map(cb => ({
+        label: cb.label,
+        checked: cb.checked
+      }))
+    };
+
+    return await this.createNote(noteData);
+  }
+
+  static async convertNoteToTemplate(noteId: number, userId: number) {
+    // Vérifier que la note appartient à l'utilisateur
+    const note = await prisma.note.findUnique({
+      where: { id: noteId }
+    });
+
+    if (!note || note.userId !== userId) {
+      throw new Error('Note non trouvée ou accès non autorisé');
+    }
+
+    // Utiliser une transaction pour garantir la cohérence
+    return await prisma.$transaction(async (tx) => {
+      // Supprimer tous les partages existants
+      await tx.noteShare.deleteMany({
+        where: { noteId: noteId }
+      });
+
+      // Convertir en template
+      return await tx.note.update({
+        where: { id: noteId },
+        data: { 
+          isTemplate: true,
+          isShared: false, // Un template ne peut pas être partagé
+          isPinned: false  // Un template ne peut pas être épinglé
+        }
+      });
+    });
+  }
+
+  static async convertTemplateToNote(templateId: number, userId: number) {
+    // Vérifier que le template appartient à l'utilisateur
+    const template = await this.findTemplateById(templateId);
+
+    if (!template || template.userId !== userId) {
+      throw new Error('Template non trouvé ou accès non autorisé');
+    }
+
+    // Convertir en note normale
+    return await prisma.note.update({
+      where: { id: templateId },
+      data: { isTemplate: false }
     });
   }
 }

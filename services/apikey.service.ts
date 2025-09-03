@@ -6,7 +6,12 @@ export enum ApiKeyPermission {
   READ_NOTES = "read_notes", 
   UPDATE_NOTES = "update_notes",
   DELETE_NOTES = "delete_notes",
-  SHARE_NOTES = "share_notes"
+  SHARE_NOTES = "share_notes",
+  READ_TEMPLATES = "read_templates",
+  CREATE_TEMPLATES = "create_templates",
+  UPDATE_TEMPLATES = "update_templates",
+  DELETE_TEMPLATES = "delete_templates",
+  USE_TEMPLATES = "use_templates"
 }
 
 export class ApiKeyService {
