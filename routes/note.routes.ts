@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware";
+import { authenticateJwtOrApiKey, requirePermission } from "../middleware/apikey.middleware";
+import { ApiKeyPermission } from "../services/apikey.service";
 import {
   createNote,
   deleteNote,
@@ -12,17 +14,17 @@ import {
   unshareNote,
   unshareNoteFromEmail,
   leaveSharedNote,
-  toggleNotePin
+  toggleNotePin,
+  reorderNotes
 } from "../controllers/note.controller";
 
 const router = Router();
-router.use(authenticate);
 
 /**
  * @swagger
  * tags:
  *   name: Notes
- *   description: Gestion des notes (authentification requise)
+ *   description: Gestion des notes (authentification JWT ou clé API requise)
  */
 
 /**
@@ -30,9 +32,11 @@ router.use(authenticate);
  * /notes:
  *   get:
  *     summary: Récupérer toutes les notes de l'utilisateur
+ *     description: Nécessite la permission 'read_notes' si utilisation d'une clé API
  *     tags: [Notes]
  *     security:
  *       - bearerAuth: []
+ *       - apiKeyAuth: []
  *     responses:
  *       200:
  *         description: Liste des notes
@@ -66,9 +70,11 @@ router.use(authenticate);
  * /notes/{id}:
  *   get:
  *     summary: Récupérer une note par son ID
+ *     description: Nécessite la permission 'read_notes' si utilisation d'une clé API
  *     tags: [Notes]
  *     security:
  *       - bearerAuth: []
+ *       - apiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -109,9 +115,11 @@ router.use(authenticate);
  * /notes:
  *   post:
  *     summary: Créer une nouvelle note
+ *     description: Nécessite la permission 'create_notes' si utilisation d'une clé API
  *     tags: [Notes]
  *     security:
  *       - bearerAuth: []
+ *       - apiKeyAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -160,9 +168,11 @@ router.use(authenticate);
  * /notes/{id}:
  *   patch:
  *     summary: Mettre à jour une note
+ *     description: Nécessite la permission 'update_notes' si utilisation d'une clé API
  *     tags: [Notes]
  *     security:
  *       - bearerAuth: []
+ *       - apiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -227,9 +237,11 @@ router.use(authenticate);
  * /notes/{id}:
  *   delete:
  *     summary: Supprimer une note
+ *     description: Nécessite la permission 'delete_notes' si utilisation d'une clé API
  *     tags: [Notes]
  *     security:
  *       - bearerAuth: []
+ *       - apiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -687,17 +699,80 @@ router.use(authenticate);
  *               error: "Erreur mise à jour"
  */
 
-router.get("/", getNotes);
-router.get("/shared", getSharedNotes);
-router.get("/:id", getNoteById);
-router.post("/", createNote);
-router.post("/:id/share", shareNote);
-router.patch("/:id", updateNote);
-router.patch("/:id/pin", toggleNotePin);
-router.patch("/checkbox/:checkboxId", updateCheckbox);
-router.delete("/:id", deleteNote);
-router.delete("/:id/share", unshareNote);
-router.delete("/:id/share/:email", unshareNoteFromEmail);
-router.delete("/:id/leave", leaveSharedNote);
+/**
+ * @swagger
+ * /notes/reorder:
+ *   patch:
+ *     summary: Réorganiser l'ordre des notes
+ *     description: Met à jour l'ordre de plusieurs notes en une seule opération. Prend une liste d'IDs de notes dans l'ordre souhaité. Toutes les notes doivent appartenir à l'utilisateur connecté. Nécessite la permission 'update_notes' si utilisation d'une clé API.
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKeyAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [noteIds]
+ *             properties:
+ *               noteIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Liste des IDs de notes dans l'ordre souhaité (index 0 = ordre 0, index 1 = ordre 1, etc.)
+ *           example:
+ *             noteIds: [3, 1, 5, 2]
+ *     responses:
+ *       200:
+ *         description: Ordre des notes mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Ordre des notes mis à jour avec succès"
+ *       400:
+ *         description: Données invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Liste d'IDs de notes requise"
+ *       403:
+ *         description: Une ou plusieurs notes n'appartiennent pas à l'utilisateur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Une ou plusieurs notes n'appartiennent pas à cet utilisateur"
+ *       500:
+ *         description: Erreur lors du réordonnancement
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Erreur lors du réordonnancement"
+ */
+
+router.get("/", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.READ_NOTES), getNotes);
+router.get("/shared", authenticate, getSharedNotes);
+router.get("/:id", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.READ_NOTES), getNoteById);
+router.post("/", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.CREATE_NOTES), createNote);
+router.post("/:id/share", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.SHARE_NOTES), shareNote);
+router.patch("/reorder", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.UPDATE_NOTES), reorderNotes);
+router.patch("/:id", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.UPDATE_NOTES), updateNote);
+router.patch("/:id/pin", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.UPDATE_NOTES), toggleNotePin);
+router.patch("/checkbox/:checkboxId", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.UPDATE_NOTES), updateCheckbox);
+router.delete("/:id", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.DELETE_NOTES), deleteNote);
+router.delete("/:id/share", authenticate, unshareNote);
+router.delete("/:id/share/:email", authenticate, unshareNoteFromEmail);
+router.delete("/:id/leave", authenticate, leaveSharedNote);
 
 export default router;

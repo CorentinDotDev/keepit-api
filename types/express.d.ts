@@ -5,6 +5,10 @@ declare global {
         id: number;
         email: string;
       };
+      apiKey?: {
+        id: number;
+        permissions: string[];
+      };
     }
   }
 }

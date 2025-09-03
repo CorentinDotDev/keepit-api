@@ -17,6 +17,7 @@ model User {
   notes         Note[]
   webhooks      Webhook[]
   refreshTokens RefreshToken[]
+  apiKeys       ApiKey[]
 
   @@map("users")
 }
@@ -28,6 +29,7 @@ model Note {
   color      String?
   isPinned   Boolean     @default(false)
   isShared   Boolean     @default(false)
+  order      Int         @default(0)
   userId     Int
   user       User        @relation(fields: [userId], references: [id])
   checkboxes Checkbox[]
@@ -78,4 +80,18 @@ model NoteShare {
 
   @@unique([noteId, email])
   @@map("note_shares")
+}
+
+model ApiKey {
+  id          Int       @id @default(autoincrement())
+  name        String
+  key         String    @unique
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissions String
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("api_keys")
 }

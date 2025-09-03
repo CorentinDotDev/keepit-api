@@ -7,7 +7,39 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: 'Notes API',
       version: '1.0.0',
-      description: 'API Express.js TypeScript pour une application de notes avec authentification et webhooks',
+      description: `API Express.js TypeScript pour une application de notes avec authentification JWT, clés API et webhooks.
+
+## Authentification
+
+Cette API supporte deux types d'authentification :
+
+### 1. Authentification JWT (Bearer Token)
+- Utilisez l'en-tête \`Authorization: Bearer <token>\`
+- Accès complet à tous les endpoints (notes, webhooks, gestion des clés API)
+- Obtenu via les endpoints de connexion (/auth/login)
+
+### 2. Authentification par Clé API (X-API-Key)
+- Utilisez l'en-tête \`X-API-Key: <clé>\`
+- Accès limité aux opérations sur les notes selon les permissions accordées
+- **Les webhooks ne sont PAS accessibles via les clés API**
+- Permissions disponibles :
+  - \`read_notes\`: Lire les notes
+  - \`create_notes\`: Créer des notes
+  - \`update_notes\`: Modifier les notes
+  - \`delete_notes\`: Supprimer les notes
+  - \`share_notes\`: Partager les notes
+
+### Opérations réservées au JWT uniquement :
+- Gestion des webhooks
+- Notes partagées (shared, unshare, leave)
+- Gestion des clés API (création, liste, suppression)
+
+## Permissions des Clés API
+
+Les clés API permettent un contrôle granulaire des permissions :
+- Une clé peut avoir une ou plusieurs permissions
+- Les permissions sont vérifiées à chaque requête
+- Les clés peuvent avoir une date d'expiration optionnelle`,
       contact: {
         name: 'API Support',
         email: 'support@notes-api.com',
@@ -25,6 +57,11 @@ const options: swaggerJsdoc.Options = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
+        },
+        apiKeyAuth: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-API-Key',
         },
       },
       schemas: {
@@ -345,6 +382,153 @@ const options: swaggerJsdoc.Options = {
             userId: 1,
             timestamp: '2023-12-01T10:00:00.000Z'
           }
+        },
+        ApiKey: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'ID unique de la clé API',
+            },
+            name: {
+              type: 'string',
+              description: 'Nom descriptif de la clé API',
+            },
+            key: {
+              type: 'string',
+              description: 'Clé API (tronquée pour sécurité)',
+            },
+            permissions: {
+              type: 'array',
+              items: {
+                type: 'string',
+                enum: ['create_notes', 'read_notes', 'update_notes', 'delete_notes', 'share_notes'],
+              },
+              description: 'Liste des permissions accordées',
+            },
+            expiresAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              description: 'Date d\'expiration (null = pas d\'expiration)',
+            },
+            lastUsedAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              description: 'Date de dernière utilisation',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Date de création',
+            },
+          },
+        },
+        ApiKeyRequest: {
+          type: 'object',
+          required: ['name', 'permissions'],
+          properties: {
+            name: {
+              type: 'string',
+              description: 'Nom descriptif de la clé API',
+            },
+            permissions: {
+              type: 'array',
+              items: {
+                type: 'string',
+                enum: ['create_notes', 'read_notes', 'update_notes', 'delete_notes', 'share_notes'],
+              },
+              minItems: 1,
+              description: 'Liste des permissions à accorder',
+            },
+            expiresAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Date d\'expiration optionnelle',
+            },
+          },
+        },
+        ApiKeyResponse: {
+          type: 'object',
+          properties: {
+            message: {
+              type: 'string',
+              description: 'Message de succès',
+            },
+            apiKey: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'integer',
+                  description: 'ID unique de la clé API',
+                },
+                name: {
+                  type: 'string',
+                  description: 'Nom descriptif de la clé API',
+                },
+                key: {
+                  type: 'string',
+                  description: 'Clé API complète (visible uniquement à la création)',
+                },
+                permissions: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                  },
+                  description: 'Liste des permissions accordées',
+                },
+                expiresAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  nullable: true,
+                  description: 'Date d\'expiration',
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'Date de création',
+                },
+              },
+            },
+          },
+        },
+        ApiKeyListResponse: {
+          type: 'object',
+          properties: {
+            apiKeys: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/ApiKey',
+              },
+              description: 'Liste des clés API (clés tronquées)',
+            },
+          },
+        },
+        PermissionItem: {
+          type: 'object',
+          properties: {
+            key: {
+              type: 'string',
+              description: 'Clé de la permission',
+            },
+            label: {
+              type: 'string',
+              description: 'Libellé lisible de la permission',
+            },
+          },
+        },
+        PermissionsResponse: {
+          type: 'object',
+          properties: {
+            permissions: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/PermissionItem',
+              },
+              description: 'Liste des permissions disponibles',
+            },
+          },
         },
       },
     },

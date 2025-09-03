@@ -7,6 +7,7 @@ import { specs } from "./swagger.config";
 import authRoutes from "./routes/auth.routes";
 import noteRoutes from "./routes/note.routes";
 import webhookRoutes from "./routes/webhook.routes";
+import apiKeyRoutes from "./routes/apikey.routes";
 
 dotenv.config();
 const app = express();
@@ -23,6 +24,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs, {
 app.use("/auth", authRoutes);
 app.use("/notes", noteRoutes);
 app.use("/webhooks", webhookRoutes);
+app.use("/api-keys", apiKeyRoutes);
 
 app.get("/", (req, res) => {
   res.json({

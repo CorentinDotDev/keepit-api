@@ -256,4 +256,31 @@ export class NoteService {
 
     return true;
   }
+
+  static async reorderNotes(userId: number, noteIds: number[]) {
+    // Vérifier que toutes les notes appartiennent à l'utilisateur
+    const userNotes = await prisma.note.findMany({
+      where: { 
+        userId,
+        id: { in: noteIds }
+      },
+      select: { id: true }
+    });
+
+    if (userNotes.length !== noteIds.length) {
+      throw new Error('Une ou plusieurs notes n\'appartiennent pas à cet utilisateur');
+    }
+
+    // Mettre à jour l'ordre des notes en transaction
+    return await prisma.$transaction(async (tx) => {
+      const updates = noteIds.map((noteId, index) =>
+        tx.note.update({
+          where: { id: noteId },
+          data: { order: index }
+        })
+      );
+      
+      return await Promise.all(updates);
+    });
+  }
 }

@@ -324,3 +324,22 @@ export async function leaveSharedNote(req: Request, res: Response) {
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: ERROR_MESSAGES.LEAVE_SHARED_ERROR });
   }
 }
+
+export async function reorderNotes(req: Request, res: Response) {
+  const { noteIds } = req.body;
+  const userId = req.user.id;
+
+  if (!noteIds || !Array.isArray(noteIds) || noteIds.length === 0) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: "Liste d'IDs de notes requise" });
+  }
+
+  try {
+    await NoteService.reorderNotes(userId, noteIds);
+    res.json({ message: "Ordre des notes mis à jour avec succès" });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("n'appartiennent pas")) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({ error: error.message });
+    }
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: "Erreur lors du réordonnancement" });
+  }
+}
