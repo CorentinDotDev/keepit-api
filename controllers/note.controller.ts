@@ -4,12 +4,11 @@ import { triggerWebhook } from "../utils/triggerWebhook";
 import { isValidTitle, isValidContent, isValidColor, sanitizeString, isValidEmail } from "../utils/validation";
 import { WEBHOOK_ACTIONS, ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_STATUS } from "../constants";
 
-// Fonction utilitaire pour formater une note avec les emails partagés
+// Fonction utilitaire pour formater une note (legacy support)
 function formatNoteWithShares(note: any) {
-  const { shares, ...noteData } = note;
   return {
-    ...noteData,
-    sharedWith: shares ? shares.map((share: any) => share.email) : []
+    ...note,
+    sharedWith: [] // Migration vers le nouveau système d'invitations
   };
 }
 
@@ -36,14 +35,9 @@ export async function getNoteById(req: Request, res: Response) {
     return res.status(HTTP_STATUS.FORBIDDEN).json({ error: ERROR_MESSAGES.ACCESS_DENIED });
   }
   
-  // Si l'utilisateur est le propriétaire, inclure la liste des emails partagés
-  // Sinon, ne pas inclure les informations de partage pour préserver la confidentialité
-  if (note.userId === userId) {
-    res.json(formatNoteWithShares(note));
-  } else {
-    const { shares, ...noteWithoutShares } = note;
-    res.json(noteWithoutShares);
-  }
+  // Note: Le système de partage a migré vers les invitations
+  // Pour l'instant, on retourne simplement la note
+  res.json(formatNoteWithShares(note));
 }
 
 export async function createNote(req: Request, res: Response) {
@@ -205,124 +199,39 @@ export async function updateCheckbox(req: Request, res: Response) {
   }
 }
 
+// DEPRECATED: Remplacé par le système d'invitations
 export async function shareNote(req: Request, res: Response) {
-  const { id } = req.params;
-  const { emails } = req.body;
-  const userId = req.user.id;
-
-  if (!emails || !Array.isArray(emails) || emails.length === 0) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: ERROR_MESSAGES.EMAILS_REQUIRED });
-  }
-
-  for (const email of emails) {
-    if (!isValidEmail(email)) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: ERROR_MESSAGES.INVALID_EMAIL });
-    }
-  }
-
-  try {
-    const existingNote = await NoteService.findNoteById(Number(id));
-    
-    if (!existingNote) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: ERROR_MESSAGES.NOTE_NOT_FOUND });
-    }
-    
-    if (existingNote.userId !== userId) {
-      return res.status(HTTP_STATUS.FORBIDDEN).json({ error: ERROR_MESSAGES.ACCESS_DENIED });
-    }
-
-    const shares = await NoteService.shareNote(Number(id), emails);
-    res.json({ message: SUCCESS_MESSAGES.NOTE_SHARED, shares });
-  } catch (error) {
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: ERROR_MESSAGES.SHARE_ERROR });
-  }
+  res.status(HTTP_STATUS.BAD_REQUEST).json({
+    error: "Cette fonctionnalité a été remplacée par le système d'invitations. Utilisez /invitations/notes/:noteId"
+  });
 }
 
+// DEPRECATED: Remplacé par le système d'invitations
 export async function getSharedNotes(req: Request, res: Response) {
-  const userEmail = req.user.email;
-
-  try {
-    const sharedNotes = await NoteService.findSharedNotesByEmail(userEmail);
-    res.json(sharedNotes);
-  } catch (error) {
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: ERROR_MESSAGES.FETCH_SHARED_ERROR });
-  }
+  res.status(HTTP_STATUS.BAD_REQUEST).json({
+    error: "Cette fonctionnalité a été remplacée par le système d'invitations. Utilisez /invitations/shared-notes"
+  });
 }
 
+// DEPRECATED: Remplacé par le système d'invitations
 export async function unshareNote(req: Request, res: Response) {
-  const { id } = req.params;
-  const userId = req.user.id;
-
-  try {
-    const existingNote = await NoteService.findNoteById(Number(id));
-    
-    if (!existingNote) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: ERROR_MESSAGES.NOTE_NOT_FOUND });
-    }
-    
-    // Seul le propriétaire peut retirer le partage
-    if (existingNote.userId !== userId) {
-      return res.status(HTTP_STATUS.FORBIDDEN).json({ error: ERROR_MESSAGES.ACCESS_DENIED });
-    }
-
-    const remainingShares = await NoteService.unshareNote(Number(id));
-    res.json({ 
-      message: SUCCESS_MESSAGES.NOTE_UNSHARED,
-      remainingShares 
-    });
-  } catch (error) {
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: ERROR_MESSAGES.UNSHARE_ERROR });
-  }
+  res.status(HTTP_STATUS.BAD_REQUEST).json({
+    error: "Cette fonctionnalité a été remplacée par le système d'invitations. Utilisez /invitations/access/:noteId/:userId"
+  });
 }
 
+// DEPRECATED: Remplacé par le système d'invitations
 export async function unshareNoteFromEmail(req: Request, res: Response) {
-  const { id, email } = req.params;
-  const userId = req.user.id;
-
-  try {
-    const existingNote = await NoteService.findNoteById(Number(id));
-    
-    if (!existingNote) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: ERROR_MESSAGES.NOTE_NOT_FOUND });
-    }
-    
-    // Seul le propriétaire peut retirer le partage
-    if (existingNote.userId !== userId) {
-      return res.status(HTTP_STATUS.FORBIDDEN).json({ error: ERROR_MESSAGES.ACCESS_DENIED });
-    }
-
-    const remainingShares = await NoteService.unshareNote(Number(id), email);
-    res.json({ 
-      message: SUCCESS_MESSAGES.NOTE_UNSHARED_FROM_EMAIL,
-      email,
-      remainingShares 
-    });
-  } catch (error) {
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: ERROR_MESSAGES.UNSHARE_ERROR });
-  }
+  res.status(HTTP_STATUS.BAD_REQUEST).json({
+    error: "Cette fonctionnalité a été remplacée par le système d'invitations. Utilisez /invitations/access/:noteId/:userId"
+  });
 }
 
+// DEPRECATED: Remplacé par le système d'invitations
 export async function leaveSharedNote(req: Request, res: Response) {
-  const { id } = req.params;
-  const userEmail = req.user.email;
-
-  try {
-    const existingNote = await NoteService.findNoteById(Number(id));
-    
-    if (!existingNote) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: ERROR_MESSAGES.NOTE_NOT_FOUND });
-    }
-
-    const success = await NoteService.leaveSharedNote(Number(id), userEmail);
-    
-    if (!success) {
-      return res.status(HTTP_STATUS.FORBIDDEN).json({ error: ERROR_MESSAGES.NOT_SHARED_WITH_USER });
-    }
-
-    res.json({ message: SUCCESS_MESSAGES.LEFT_SHARED_NOTE });
-  } catch (error) {
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: ERROR_MESSAGES.LEAVE_SHARED_ERROR });
-  }
+  res.status(HTTP_STATUS.BAD_REQUEST).json({
+    error: "Cette fonctionnalité a été remplacée par le système d'invitations. Utilisez /invitations/leave/:noteId"
+  });
 }
 
 export async function reorderNotes(req: Request, res: Response) {

@@ -2,5 +2,9 @@
   {
     "type": "sqlite",
     "path": "/Users/clefort/Projects/express-notes-api/prisma/dev.db"
+  },
+  {
+    "type": "sqlite",
+    "path": "/Users/clefort/Projects/express-notes-api/dev.db"
   }
 ]

@@ -9,6 +9,7 @@ import noteRoutes from "./routes/note.routes";
 import webhookRoutes from "./routes/webhook.routes";
 import apiKeyRoutes from "./routes/apikey.routes";
 import templateRoutes from "./routes/template.routes";
+import invitationRoutes from "./routes/invitation.routes";
 
 dotenv.config();
 const app = express();
@@ -27,6 +28,7 @@ app.use("/notes", noteRoutes);
 app.use("/webhooks", webhookRoutes);
 app.use("/api-keys", apiKeyRoutes);
 app.use("/templates", templateRoutes);
+app.use("/invitations", invitationRoutes);
 
 app.get("/", (req, res) => {
   res.json({

@@ -11,32 +11,37 @@ datasource db {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  email         String         @unique
-  password      String
-  notes         Note[]
-  webhooks      Webhook[]
-  refreshTokens RefreshToken[]
-  apiKeys       ApiKey[]
+  id                    Int               @id @default(autoincrement())
+  email                 String            @unique
+  password              String
+  notes                 Note[]
+  webhooks              Webhook[]
+  refreshTokens         RefreshToken[]
+  apiKeys               ApiKey[]
+  sentInvitations       NoteInvitation[]  @relation("InvitationsSent")
+  receivedInvitations   NoteInvitation[]  @relation("InvitationsReceived")
+  noteAccess            NoteAccess[]      @relation("NoteAccess")
+  grantedAccess         NoteAccess[]      @relation("AccessGranted")
 
   @@map("users")
 }
 
 model Note {
-  id         Int         @id @default(autoincrement())
-  title      String
-  content    String
-  color      String?
-  isPinned   Boolean     @default(false)
-  isShared   Boolean     @default(false)
-  isTemplate Boolean     @default(false)
-  order      Int         @default(0)
-  userId     Int
-  user       User        @relation(fields: [userId], references: [id])
-  checkboxes Checkbox[]
-  shares     NoteShare[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id          Int              @id @default(autoincrement())
+  title       String
+  content     String
+  color       String?
+  isPinned    Boolean          @default(false)
+  isShared    Boolean          @default(false)
+  isTemplate  Boolean          @default(false)
+  order       Int              @default(0)
+  userId      Int
+  user        User             @relation(fields: [userId], references: [id])
+  checkboxes  Checkbox[]
+  invitations NoteInvitation[]
+  accessRights NoteAccess[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   @@map("notes")
 }
@@ -72,15 +77,41 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-model NoteShare {
-  id        Int      @id @default(autoincrement())
-  noteId    Int
-  email     String
-  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+model NoteInvitation {
+  id              Int       @id @default(autoincrement())
+  noteId          Int
+  note            Note      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  invitedEmail    String
+  invitedById     Int
+  invitedBy       User      @relation("InvitationsSent", fields: [invitedById], references: [id])
+  permission      String    @default("READ") // READ, WRITE, ADMIN
+  status          String    @default("PENDING") // PENDING, ACCEPTED, DECLINED, EXPIRED, REVOKED
+  token           String    @unique
+  message         String?
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  acceptedById    Int?
+  acceptedBy      User?     @relation("InvitationsReceived", fields: [acceptedById], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  @@unique([noteId, email])
-  @@map("note_shares")
+  @@unique([noteId, invitedEmail])
+  @@map("note_invitations")
+}
+
+model NoteAccess {
+  id         Int      @id @default(autoincrement())
+  noteId     Int
+  note       Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  userId     Int
+  user       User     @relation("NoteAccess", fields: [userId], references: [id])
+  permission String   @default("READ") // READ, WRITE, ADMIN
+  grantedAt  DateTime @default(now())
+  grantedBy  Int
+  grantor    User     @relation("AccessGranted", fields: [grantedBy], references: [id])
+
+  @@unique([noteId, userId])
+  @@map("note_access")
 }
 
 model ApiKey {
