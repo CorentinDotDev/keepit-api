@@ -241,6 +241,50 @@ export async function getSentInvitations(req: Request, res: Response) {
   }
 }
 
+export async function getNoteInvitations(req: Request, res: Response) {
+  try {
+    const { noteId } = req.params;
+    const userId = req.user.id;
+
+    if (!noteId || isNaN(Number(noteId))) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        error: "ID de note invalide"
+      });
+    }
+
+    const invitations = await InvitationService.getNoteInvitations(Number(noteId), userId);
+
+    res.json({
+      invitations: invitations.map(inv => ({
+        id: inv.id,
+        invitedEmail: inv.invitedEmail,
+        permission: inv.permission,
+        message: inv.message,
+        status: inv.status,
+        token: inv.status === 'PENDING' ? inv.token : undefined, // Token seulement si en attente
+        expiresAt: inv.expiresAt,
+        createdAt: inv.createdAt,
+        acceptedAt: inv.acceptedAt,
+        acceptedBy: inv.acceptedBy,
+        hasCurrentAccess: inv.hasCurrentAccess,
+        currentPermission: inv.currentPermission
+      }))
+    });
+  } catch (error: any) {
+    console.error("Erreur lors de la récupération des invitations de la note:", error);
+    
+    if (error.message.includes("Note non trouvée") || error.message.includes("accès non autorisé")) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
+        error: "Vous n'êtes pas autorisé à voir les invitations de cette note"
+      });
+    }
+
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      error: "Erreur lors de la récupération des invitations de la note"
+    });
+  }
+}
+
 export async function revokeInvitation(req: Request, res: Response) {
   try {
     const { invitationId } = req.params;

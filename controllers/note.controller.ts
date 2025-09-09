@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { NoteService } from "../services/note.service";
 import { triggerWebhook } from "../utils/triggerWebhook";
-import { isValidTitle, isValidContent, isValidColor, sanitizeString, isValidEmail } from "../utils/validation";
+import { isValidTitle, isValidContent, isValidColor, sanitizeString } from "../utils/validation";
 import { WEBHOOK_ACTIONS, ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_STATUS } from "../constants";
 
 // Fonction utilitaire pour formater une note (legacy support)
@@ -199,40 +199,6 @@ export async function updateCheckbox(req: Request, res: Response) {
   }
 }
 
-// DEPRECATED: Remplacé par le système d'invitations
-export async function shareNote(req: Request, res: Response) {
-  res.status(HTTP_STATUS.BAD_REQUEST).json({
-    error: "Cette fonctionnalité a été remplacée par le système d'invitations. Utilisez /invitations/notes/:noteId"
-  });
-}
-
-// DEPRECATED: Remplacé par le système d'invitations
-export async function getSharedNotes(req: Request, res: Response) {
-  res.status(HTTP_STATUS.BAD_REQUEST).json({
-    error: "Cette fonctionnalité a été remplacée par le système d'invitations. Utilisez /invitations/shared-notes"
-  });
-}
-
-// DEPRECATED: Remplacé par le système d'invitations
-export async function unshareNote(req: Request, res: Response) {
-  res.status(HTTP_STATUS.BAD_REQUEST).json({
-    error: "Cette fonctionnalité a été remplacée par le système d'invitations. Utilisez /invitations/access/:noteId/:userId"
-  });
-}
-
-// DEPRECATED: Remplacé par le système d'invitations
-export async function unshareNoteFromEmail(req: Request, res: Response) {
-  res.status(HTTP_STATUS.BAD_REQUEST).json({
-    error: "Cette fonctionnalité a été remplacée par le système d'invitations. Utilisez /invitations/access/:noteId/:userId"
-  });
-}
-
-// DEPRECATED: Remplacé par le système d'invitations
-export async function leaveSharedNote(req: Request, res: Response) {
-  res.status(HTTP_STATUS.BAD_REQUEST).json({
-    error: "Cette fonctionnalité a été remplacée par le système d'invitations. Utilisez /invitations/leave/:noteId"
-  });
-}
 
 export async function reorderNotes(req: Request, res: Response) {
   const { noteIds } = req.body;

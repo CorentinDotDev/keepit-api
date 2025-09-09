@@ -46,32 +46,31 @@ export class InvitationService {
       if (existingInvitation.status === InvitationStatus.PENDING) {
         throw new Error("Une invitation est déjà en cours pour cet utilisateur");
       }
-      if (existingInvitation.status === InvitationStatus.ACCEPTED) {
-        // Vérifier si l'utilisateur a toujours accès
-        const invitedUser = await prisma.user.findUnique({
-          where: { email: invitedEmail }
+      
+      // Pour les autres statuts (ACCEPTED, DECLINED, etc.), vérifier si l'utilisateur a un accès actuel
+      const invitedUser = await prisma.user.findUnique({
+        where: { email: invitedEmail }
+      });
+      
+      if (invitedUser) {
+        const currentAccess = await prisma.noteAccess.findUnique({
+          where: {
+            noteId_userId: {
+              noteId,
+              userId: invitedUser.id
+            }
+          }
         });
         
-        if (invitedUser) {
-          const currentAccess = await prisma.noteAccess.findUnique({
-            where: {
-              noteId_userId: {
-                noteId,
-                userId: invitedUser.id
-              }
-            }
-          });
-          
-          if (currentAccess) {
-            throw new Error("L'utilisateur a déjà accès à cette note");
-          } else {
-            // L'invitation a été acceptée mais l'accès a été retiré
-            // On peut créer une nouvelle invitation - supprimer l'ancienne
-            await prisma.noteInvitation.delete({
-              where: { id: existingInvitation.id }
-            });
-          }
+        if (currentAccess) {
+          throw new Error("L'utilisateur a déjà accès à cette note");
         }
+        
+        // L'utilisateur n'a pas d'accès actuel, on peut créer une nouvelle invitation
+        // Supprimer l'ancienne invitation pour respecter la contrainte unique
+        await prisma.noteInvitation.delete({
+          where: { id: existingInvitation.id }
+        });
       }
     }
 
@@ -351,6 +350,62 @@ export class InvitationService {
         }
       },
       orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  static async getNoteInvitations(noteId: number, userId: number) {
+    // Vérifier que l'utilisateur est propriétaire de la note
+    const note = await prisma.note.findUnique({
+      where: { id: noteId }
+    });
+
+    if (!note || note.userId !== userId) {
+      throw new Error("Note non trouvée ou accès non autorisé");
+    }
+
+    // Récupérer toutes les invitations pour cette note
+    const invitations = await prisma.noteInvitation.findMany({
+      where: { noteId },
+      include: {
+        acceptedBy: {
+          select: {
+            id: true,
+            email: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Récupérer les accès actuels pour enrichir les données
+    const currentAccesses = await prisma.noteAccess.findMany({
+      where: { noteId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    // Enrichir les invitations acceptées avec l'info d'accès actuel
+    return invitations.map(invitation => {
+      let hasCurrentAccess = false;
+      let currentPermission = null;
+
+      if (invitation.status === InvitationStatus.ACCEPTED && invitation.acceptedBy) {
+        const access = currentAccesses.find(a => a.userId === invitation.acceptedBy?.id);
+        hasCurrentAccess = !!access;
+        currentPermission = access?.permission || null;
+      }
+
+      return {
+        ...invitation,
+        hasCurrentAccess,
+        currentPermission
+      };
     });
   }
 

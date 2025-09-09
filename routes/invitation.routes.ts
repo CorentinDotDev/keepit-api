@@ -7,6 +7,7 @@ import {
   declineInvitation,
   getPendingInvitations,
   getSentInvitations,
+  getNoteInvitations,
   revokeInvitation,
   getSharedNotes,
   removeAccess,
@@ -272,6 +273,44 @@ router.get("/pending", authenticate, getPendingInvitations);
  *                     $ref: '#/components/schemas/Invitation'
  */
 router.get("/sent", authenticate, getSentInvitations);
+
+/**
+ * @swagger
+ * /invitations/notes/{noteId}:
+ *   get:
+ *     summary: Récupérer les invitations d'une note spécifique
+ *     tags: [Invitations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: noteId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Liste des invitations pour cette note
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 invitations:
+ *                   type: array
+ *                   items:
+ *                     allOf:
+ *                       - $ref: '#/components/schemas/Invitation'
+ *                       - type: object
+ *                         properties:
+ *                           hasCurrentAccess:
+ *                             type: boolean
+ *                           currentPermission:
+ *                             type: string
+ *       403:
+ *         description: Vous n'êtes pas autorisé à voir les invitations de cette note
+ */
+router.get("/notes/:noteId", authenticate, getNoteInvitations);
 
 /**
  * @swagger
