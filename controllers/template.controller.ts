@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { NoteService } from "../services/note.service";
 import { triggerWebhook } from "../utils/triggerWebhook";
-import { isValidTitle, isValidContent, isValidColor } from "../utils/validation";
+import { isValidTitle, isValidContent, isValidColor, sanitizeString, sanitizeCheckboxes } from "../utils/validation";
 import { WEBHOOK_ACTIONS, ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_STATUS } from "../constants";
 
 export async function getTemplates(req: Request, res: Response) {
@@ -70,13 +70,13 @@ export async function createTemplate(req: Request, res: Response) {
     }
 
     const template = await NoteService.createNote({
-      title,
-      content,
+      title: sanitizeString(title),
+      content: sanitizeString(content),
       color,
       isPinned: false,
       isTemplate: true, // Marquer comme template
       userId,
-      checkboxes
+      checkboxes: sanitizeCheckboxes(checkboxes)
     });
 
     res.status(HTTP_STATUS.CREATED).json(template);
@@ -128,10 +128,10 @@ export async function updateTemplate(req: Request, res: Response) {
     }
 
     const updatedTemplate = await NoteService.updateNote(Number(id), {
-      title,
-      content,
+      title: title ? sanitizeString(title) : undefined,
+      content: content ? sanitizeString(content) : undefined,
       color,
-      checkboxes,
+      checkboxes: sanitizeCheckboxes(checkboxes),
       isTemplate: true // S'assurer que ça reste un template
     });
 
@@ -201,7 +201,11 @@ export async function createNoteFromTemplate(req: Request, res: Response) {
     const note = await NoteService.createNoteFromTemplate(
       Number(templateId), 
       userId, 
-      { title, content, color }
+      { 
+        title: title ? sanitizeString(title) : undefined, 
+        content: content ? sanitizeString(content) : undefined, 
+        color 
+      }
     );
 
     // Déclencher les webhooks pour la création de note

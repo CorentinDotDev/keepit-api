@@ -34,5 +34,46 @@ export function isValidUrl(url: string): boolean {
 }
 
 export function sanitizeString(str: string): string {
-  return str.trim().replace(/[<>]/g, '');
+  if (!str) return '';
+  
+  return str
+    .trim()
+    // Supprimer seulement les caractères dangereux qui pourraient casser l'API
+    // Garder le contenu utilisateur intact
+    .replace(/\0/g, '') // Null bytes
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Caractères de contrôle dangereux
+}
+
+export function sanitizeName(str: string): string {
+  if (!str) return '';
+  
+  return str
+    .trim()
+    // Pour les noms (API keys, etc.) - plus strict
+    .replace(/[<>]/g, '') // Pas de chevrons
+    .replace(/["\\']/g, '') // Pas de quotes
+    .replace(/\0/g, '') // Null bytes
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Caractères de contrôle
+}
+
+export function sanitizeMessage(str: string): string {
+  if (!str) return '';
+  
+  return str
+    .trim()
+    // Pour les messages courts - enlever seulement le dangereux
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/data:/gi, '')
+    .replace(/\0/g, '')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+}
+
+export function sanitizeCheckboxes(checkboxes?: Array<{ id?: number; label: string; checked: boolean }>): Array<{ id?: number; label: string; checked: boolean }> | undefined {
+  if (!checkboxes) return undefined;
+  
+  return checkboxes.map(checkbox => ({
+    ...checkbox,
+    label: sanitizeMessage(checkbox.label) // Les labels peuvent contenir du texte riche
+  }));
 }
