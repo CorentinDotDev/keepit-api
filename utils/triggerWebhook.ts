@@ -1,5 +1,6 @@
 import prisma from "../prisma/client";
 import { SECURITY_CONFIG } from "../constants";
+import { logger } from "./logger";
 
 const webhookCache = new Map<string, number>();
 
@@ -21,8 +22,7 @@ export async function triggerWebhook(
     const now = Date.now();
 
     if (lastCall && now - lastCall < SECURITY_CONFIG.WEBHOOK_RATE_LIMIT_MS) {
-      // Max 1 appel par seconde
-      console.warn(`Webhook rate limited: ${webhook.url}`);
+      logger.warn(`Webhook rate limited: ${webhook.url}`, { userId });
       continue;
     }
 
@@ -34,9 +34,9 @@ export async function triggerWebhook(
         () => controller.abort(),
         SECURITY_CONFIG.WEBHOOK_TIMEOUT_MS
       ); // Timeout 5s
-      if (SECURITY_CONFIG.ENABLE_WEBHOOK_LOGS) {
-        console.log(`Triggering webhook: ${webhook.url}`);
-      }
+      
+      logger.debug(`Triggering webhook: ${webhook.url}`);
+
       await fetch(webhook.url, {
         method: "POST",
         headers: {
@@ -48,9 +48,11 @@ export async function triggerWebhook(
 
       clearTimeout(timeoutId);
     } catch (err) {
-      if (err instanceof Error) {
-        console.error(`Webhook failed for user ${userId}:`, err.message);
-      }
+      logger.error(`Webhook failed for user ${userId}`, {
+        error: err instanceof Error ? err.message : 'Unknown error',
+        webhookUrl: webhook.url,
+        userId
+      });
     }
   }
 }
