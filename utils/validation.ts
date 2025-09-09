@@ -38,36 +38,35 @@ export function sanitizeString(str: string): string {
   
   return str
     .trim()
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, '')
-    // Escape HTML entities
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
-    // Remove null bytes and control characters
-    .replace(/\0/g, '')
-    .replace(/[\x00-\x1F\x7F]/g, '');
+    // Supprimer seulement les caractères dangereux qui pourraient casser l'API
+    // Garder le contenu utilisateur intact
+    .replace(/\0/g, '') // Null bytes
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Caractères de contrôle dangereux
 }
 
-export function sanitizeHtml(str: string): string {
+export function sanitizeName(str: string): string {
   if (!str) return '';
   
   return str
     .trim()
-    // Remove script tags and their content
+    // Pour les noms (API keys, etc.) - plus strict
+    .replace(/[<>]/g, '') // Pas de chevrons
+    .replace(/["\\']/g, '') // Pas de quotes
+    .replace(/\0/g, '') // Null bytes
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Caractères de contrôle
+}
+
+export function sanitizeMessage(str: string): string {
+  if (!str) return '';
+  
+  return str
+    .trim()
+    // Pour les messages courts - enlever seulement le dangereux
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    // Remove javascript: and data: URLs
     .replace(/javascript:/gi, '')
     .replace(/data:/gi, '')
-    // Remove on* event handlers
-    .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
-    .replace(/on\w+\s*=\s*'[^']*'/gi, '')
-    // Remove style attributes that might contain expressions
-    .replace(/style\s*=\s*"[^"]*"/gi, '')
-    .replace(/style\s*=\s*'[^']*'/gi, '');
+    .replace(/\0/g, '')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 }
 
 export function sanitizeCheckboxes(checkboxes?: Array<{ id?: number; label: string; checked: boolean }>): Array<{ id?: number; label: string; checked: boolean }> | undefined {
@@ -75,6 +74,6 @@ export function sanitizeCheckboxes(checkboxes?: Array<{ id?: number; label: stri
   
   return checkboxes.map(checkbox => ({
     ...checkbox,
-    label: sanitizeString(checkbox.label)
+    label: sanitizeMessage(checkbox.label) // Les labels peuvent contenir du texte riche
   }));
 }

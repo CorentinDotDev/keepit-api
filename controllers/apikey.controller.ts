@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ApiKeyService, ApiKeyPermission } from "../services/apikey.service";
 import { HTTP_STATUS } from "../constants";
-import { sanitizeString } from "../utils/validation";
+import { sanitizeName } from "../utils/validation";
 
 export async function createApiKey(req: Request, res: Response) {
   try {
@@ -34,7 +34,7 @@ export async function createApiKey(req: Request, res: Response) {
 
     const apiKey = await ApiKeyService.createApiKey(
       userId, 
-      sanitizeString(name), 
+      sanitizeName(name), 
       validPermissions, 
       expirationDate
     );

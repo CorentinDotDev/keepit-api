@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { InvitationService } from "../services/invitation.service";
-import { isValidEmail, sanitizeString } from "../utils/validation";
+import { isValidEmail, sanitizeMessage } from "../utils/validation";
 import { HTTP_STATUS } from "../constants";
 import { InvitationPermission } from "../types/invitation.types";
 
@@ -36,7 +36,7 @@ export async function createInvitation(req: Request, res: Response) {
       email,
       userId,
       permission,
-      message ? sanitizeString(message) : undefined,
+      message ? sanitizeMessage(message) : undefined,
       expiresInDays
     );
 
