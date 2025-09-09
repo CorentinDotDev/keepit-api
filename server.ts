@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { specs } from "./swagger.config";
+import { logger } from "./utils/logger";
+import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 
 import authRoutes from "./routes/auth.routes";
 import noteRoutes from "./routes/note.routes";
@@ -37,7 +39,11 @@ app.get("/", (req, res) => {
   });
 });
 
+// Middleware de gestion d'erreurs (doit être en dernier)
+app.use(notFoundHandler);
+app.use(errorHandler);
+
 app.listen(3000, () => {
-  console.log("API Notes lancée sur http://localhost:3000");
-  console.log("Documentation Swagger disponible sur http://localhost:3000/api-docs");
+  logger.info("API Notes lancée sur http://localhost:3000");
+  logger.info("Documentation Swagger disponible sur http://localhost:3000/api-docs");
 });
