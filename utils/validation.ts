@@ -34,5 +34,38 @@ export function isValidUrl(url: string): boolean {
 }
 
 export function sanitizeString(str: string): string {
-  return str.trim().replace(/[<>]/g, '');
+  if (!str) return '';
+  
+  return str
+    .trim()
+    // Remove HTML tags
+    .replace(/<[^>]*>/g, '')
+    // Escape HTML entities
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+    // Remove null bytes and control characters
+    .replace(/\0/g, '')
+    .replace(/[\x00-\x1F\x7F]/g, '');
+}
+
+export function sanitizeHtml(str: string): string {
+  if (!str) return '';
+  
+  return str
+    .trim()
+    // Remove script tags and their content
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    // Remove javascript: and data: URLs
+    .replace(/javascript:/gi, '')
+    .replace(/data:/gi, '')
+    // Remove on* event handlers
+    .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
+    .replace(/on\w+\s*=\s*'[^']*'/gi, '')
+    // Remove style attributes that might contain expressions
+    .replace(/style\s*=\s*"[^"]*"/gi, '')
+    .replace(/style\s*=\s*'[^']*'/gi, '');
 }
