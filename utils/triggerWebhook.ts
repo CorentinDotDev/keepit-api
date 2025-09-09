@@ -1,13 +1,20 @@
 import prisma from "../prisma/client";
 import { SECURITY_CONFIG } from "../constants";
+import { WebhookPayload } from "../types/webhook.types";
 
 const webhookCache = new Map<string, number>();
 
 export async function triggerWebhook(
   userId: number,
   action: string,
-  payload: any
+  noteData: any
 ) {
+  const payload: WebhookPayload = {
+    action,
+    note: noteData,
+    userId,
+    timestamp: new Date().toISOString()
+  };
   const webhooks = await prisma.webhook.findMany({
     where: { userId, action },
   });
