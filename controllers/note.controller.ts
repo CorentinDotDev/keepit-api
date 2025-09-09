@@ -4,18 +4,9 @@ import { triggerWebhook } from "../utils/triggerWebhook";
 import { isValidTitle, isValidContent, isValidColor, sanitizeString } from "../utils/validation";
 import { WEBHOOK_ACTIONS, ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_STATUS } from "../constants";
 
-// Fonction utilitaire pour formater une note (legacy support)
-function formatNoteWithShares(note: any) {
-  return {
-    ...note,
-    sharedWith: [] // Migration vers le nouveau système d'invitations
-  };
-}
-
 export async function getNotes(req: Request, res: Response) {
   const notes = await NoteService.findNotesByUserId(req.user.id);
-  const formattedNotes = notes.map(formatNoteWithShares);
-  res.json(formattedNotes);
+  res.json(notes);
 }
 
 export async function getNoteById(req: Request, res: Response) {
@@ -35,9 +26,7 @@ export async function getNoteById(req: Request, res: Response) {
     return res.status(HTTP_STATUS.FORBIDDEN).json({ error: ERROR_MESSAGES.ACCESS_DENIED });
   }
   
-  // Note: Le système de partage a migré vers les invitations
-  // Pour l'instant, on retourne simplement la note
-  res.json(formatNoteWithShares(note));
+  res.json(note);
 }
 
 export async function createNote(req: Request, res: Response) {
