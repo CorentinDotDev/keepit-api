@@ -21,6 +21,7 @@ export const SECURITY_CONFIG = {
   WEBHOOK_RATE_LIMIT_MS: 1000,
   JWT_EXPIRATION: "1m",
   REFRESH_TOKEN_EXPIRATION_DAYS: 30,
+  ENABLE_WEBHOOK_LOGS: process.env.NODE_ENV === 'development',
 } as const;
 
 // HTTP Status codes commonly used
