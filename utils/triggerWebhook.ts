@@ -34,8 +34,9 @@ export async function triggerWebhook(
         () => controller.abort(),
         SECURITY_CONFIG.WEBHOOK_TIMEOUT_MS
       ); // Timeout 5s
-      console.log(`Triggering webhook: ${webhook.url}`);
-      console.log(payload);
+      if (SECURITY_CONFIG.ENABLE_WEBHOOK_LOGS) {
+        console.log(`Triggering webhook: ${webhook.url}`);
+      }
       await fetch(webhook.url, {
         method: "POST",
         headers: {
