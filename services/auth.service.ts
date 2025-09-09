@@ -2,10 +2,11 @@ import prisma from "../prisma/client";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { SECURITY_CONFIG } from "../constants";
+import { RefreshTokenRecord } from "../types/webhook.types";
 
 export class AuthService {
   static async createUser(email: string, password: string) {
-    const hashed = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, SECURITY_CONFIG.BCRYPT_ROUNDS);
     return await prisma.user.create({
       data: { email, password: hashed }
     });
@@ -47,7 +48,7 @@ export class AuthService {
     return await prisma.refreshToken.delete({ where: { token } });
   }
 
-  static async isRefreshTokenValid(refreshToken: any) {
-    return refreshToken && new Date() < new Date(refreshToken.expiresAt);
+  static async isRefreshTokenValid(refreshToken: RefreshTokenRecord | null): Promise<boolean> {
+    return refreshToken !== null && new Date() < new Date(refreshToken.expiresAt);
   }
 }

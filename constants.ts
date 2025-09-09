@@ -21,6 +21,7 @@ export const SECURITY_CONFIG = {
   WEBHOOK_RATE_LIMIT_MS: 1000,
   JWT_EXPIRATION: "1m",
   REFRESH_TOKEN_EXPIRATION_DAYS: 30,
+  BCRYPT_ROUNDS: 12,
 } as const;
 
 // HTTP Status codes commonly used
