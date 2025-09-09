@@ -16,6 +16,9 @@ import invitationRoutes from "./routes/invitation.routes";
 dotenv.config();
 const app = express();
 
+const PORT = process.env.PORT || 3000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
 app.use(cors());
 app.use(express.json());
 
@@ -33,9 +36,15 @@ app.use("/templates", templateRoutes);
 app.use("/invitations", invitationRoutes);
 
 app.get("/", (req, res) => {
+  const baseUrl = NODE_ENV === 'production' 
+    ? `https://${req.get('host')}` 
+    : `http://localhost:${PORT}`;
+    
   res.json({
     message: "Bienvenue sur l'API Notes",
-    documentation: "http://localhost:3000/api-docs"
+    documentation: `${baseUrl}/api-docs`,
+    environment: NODE_ENV,
+    version: "1.0.0"
   });
 });
 
@@ -43,7 +52,8 @@ app.get("/", (req, res) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-app.listen(3000, () => {
-  logger.info("API Notes lancée sur http://localhost:3000");
-  logger.info("Documentation Swagger disponible sur http://localhost:3000/api-docs");
+app.listen(PORT, () => {
+  console.log(`API Notes lancée sur http://localhost:${PORT}`);
+  console.log(`Documentation Swagger disponible sur http://localhost:${PORT}/api-docs`);
+  console.log(`Environnement: ${NODE_ENV}`);
 });
