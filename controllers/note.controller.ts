@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { NoteService } from "../services/note.service";
 import { triggerWebhook } from "../utils/triggerWebhook";
-import { isValidTitle, isValidContent, isValidColor, sanitizeString } from "../utils/validation";
+import { isValidTitle, isValidContent, isValidColor, sanitizeString, sanitizeCheckboxes } from "../utils/validation";
 import { WEBHOOK_ACTIONS, ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_STATUS } from "../constants";
 
 // Fonction utilitaire pour formater une note (legacy support)
@@ -63,7 +63,7 @@ export async function createNote(req: Request, res: Response) {
       color,
       isPinned,
       userId,
-      checkboxes
+      checkboxes: sanitizeCheckboxes(checkboxes)
     });
 
     await triggerWebhook(userId, WEBHOOK_ACTIONS.NOTE_CREATED, note);
@@ -93,12 +93,12 @@ export async function updateNote(req: Request, res: Response) {
     }
 
     const note = await NoteService.updateNote(Number(id), {
-      title,
-      content,
+      title: title ? sanitizeString(title) : undefined,
+      content: content ? sanitizeString(content) : undefined,
       color,
       isPinned,
       isShared,
-      checkboxes
+      checkboxes: sanitizeCheckboxes(checkboxes)
     });
 
     // Déclencher le webhook pour le propriétaire original de la note

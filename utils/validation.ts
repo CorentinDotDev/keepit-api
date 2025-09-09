@@ -69,3 +69,12 @@ export function sanitizeHtml(str: string): string {
     .replace(/style\s*=\s*"[^"]*"/gi, '')
     .replace(/style\s*=\s*'[^']*'/gi, '');
 }
+
+export function sanitizeCheckboxes(checkboxes?: Array<{ id?: number; label: string; checked: boolean }>): Array<{ id?: number; label: string; checked: boolean }> | undefined {
+  if (!checkboxes) return undefined;
+  
+  return checkboxes.map(checkbox => ({
+    ...checkbox,
+    label: sanitizeString(checkbox.label)
+  }));
+}
