@@ -8,10 +8,10 @@ declare global {
       };
       apiKey?: {
         id: number;
-        userId: number;
-        key: string;
-        name: string;
-        permissions: string;
+        userId?: number;
+        key?: string;
+        name?: string;
+        permissions: any;
       };
     }
   }

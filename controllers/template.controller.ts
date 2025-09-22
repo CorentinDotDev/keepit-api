@@ -6,7 +6,7 @@ import { WEBHOOK_ACTIONS, ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_STATUS } from "
 
 export async function getTemplates(req: Request, res: Response) {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     const templates = await NoteService.findTemplatesByUserId(userId);
     res.json(templates);
   } catch (error) {
@@ -20,7 +20,7 @@ export async function getTemplates(req: Request, res: Response) {
 export async function getTemplateById(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
     
     const template = await NoteService.findTemplateById(Number(id));
     
@@ -49,7 +49,7 @@ export async function getTemplateById(req: Request, res: Response) {
 export async function createTemplate(req: Request, res: Response) {
   try {
     const { title, content, color, checkboxes } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!isValidTitle(title)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
@@ -92,7 +92,7 @@ export async function updateTemplate(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const { title, content, color, checkboxes } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     // Vérifier que le template existe et appartient à l'utilisateur
     const existingTemplate = await NoteService.findTemplateById(Number(id));
@@ -147,7 +147,7 @@ export async function updateTemplate(req: Request, res: Response) {
 export async function deleteTemplate(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     // Vérifier que le template existe et appartient à l'utilisateur
     const existingTemplate = await NoteService.findTemplateById(Number(id));
@@ -177,7 +177,7 @@ export async function createNoteFromTemplate(req: Request, res: Response) {
   try {
     const { templateId } = req.params;
     const { title, content, color } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     // Validation des overrides optionnels
     if (title && !isValidTitle(title)) {
@@ -230,7 +230,7 @@ export async function createNoteFromTemplate(req: Request, res: Response) {
 export async function convertNoteToTemplate(req: Request, res: Response) {
   try {
     const { noteId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     const template = await NoteService.convertNoteToTemplate(Number(noteId), userId);
     res.json(template);
@@ -252,7 +252,7 @@ export async function convertNoteToTemplate(req: Request, res: Response) {
 export async function convertTemplateToNote(req: Request, res: Response) {
   try {
     const { templateId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     const note = await NoteService.convertTemplateToNote(Number(templateId), userId);
     res.json(note);

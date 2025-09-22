@@ -107,7 +107,8 @@ export async function refresh(req: Request, res: Response) {
 
 export async function verifyAuth(req: Request, res: Response) {
   try {
-    const user = req.user;
+    // Dans une route protégée, req.user! est garanti d'exister grâce au middleware d'auth
+    const user = req.user!;
     res.json({ 
       valid: true,
       user: {

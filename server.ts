@@ -1,3 +1,4 @@
+/// <reference path="./global.d.ts" />
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -14,19 +15,26 @@ import templateRoutes from "./routes/template.routes";
 import invitationRoutes from "./routes/invitation.routes";
 
 dotenv.config();
+console.log("✅ Environment loaded");
+
 const app = express();
+console.log("✅ Express app created");
 
 const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const NODE_ENV = process.env.NODE_ENV || "development";
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs, {
-  explorer: true,
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: "Notes API Documentation",
-}));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "Notes API Documentation",
+  })
+);
 
 app.use("/auth", authRoutes);
 app.use("/notes", noteRoutes);
@@ -36,15 +44,16 @@ app.use("/templates", templateRoutes);
 app.use("/invitations", invitationRoutes);
 
 app.get("/", (req, res) => {
-  const baseUrl = NODE_ENV === 'production' 
-    ? `https://${req.get('host')}` 
-    : `http://localhost:${PORT}`;
-    
+  const baseUrl =
+    NODE_ENV === "production"
+      ? `https://${req.get("host")}`
+      : `http://localhost:${PORT}`;
+
   res.json({
     message: "Bienvenue sur l'API Notes",
     documentation: `${baseUrl}/api-docs`,
     environment: NODE_ENV,
-    version: "1.0.0"
+    version: "1.0.0",
   });
 });
 
@@ -54,6 +63,8 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`API Notes lancée sur http://localhost:${PORT}`);
-  console.log(`Documentation Swagger disponible sur http://localhost:${PORT}/api-docs`);
+  console.log(
+    `Documentation Swagger disponible sur http://localhost:${PORT}/api-docs`
+  );
   console.log(`Environnement: ${NODE_ENV}`);
 });

@@ -6,7 +6,7 @@ import { sanitizeName } from "../utils/validation";
 export async function createApiKey(req: Request, res: Response) {
   try {
     const { name, permissions, expiresAt } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!name || !permissions || !Array.isArray(permissions)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
@@ -60,7 +60,7 @@ export async function createApiKey(req: Request, res: Response) {
 
 export async function getApiKeys(req: Request, res: Response) {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     const apiKeys = await ApiKeyService.getUserApiKeys(userId);
 
     const formattedApiKeys = apiKeys.map(key => ({
@@ -85,7 +85,7 @@ export async function getApiKeys(req: Request, res: Response) {
 export async function deleteApiKey(req: Request, res: Response) {
   try {
     const { keyId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!keyId || isNaN(Number(keyId))) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 

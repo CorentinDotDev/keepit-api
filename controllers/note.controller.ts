@@ -5,14 +5,14 @@ import { isValidTitle, isValidContent, isValidColor, sanitizeString, sanitizeChe
 import { WEBHOOK_ACTIONS, ERROR_MESSAGES, SUCCESS_MESSAGES, HTTP_STATUS } from "../constants";
 
 export async function getNotes(req: Request, res: Response) {
-  const notes = await NoteService.findNotesByUserId(req.user.id);
+  const notes = await NoteService.findNotesByUserId(req.user!.id);
   res.json(notes);
 }
 
 export async function getNoteById(req: Request, res: Response) {
   const noteId = Number(req.params.id);
-  const userId = req.user.id;
-  const userEmail = req.user.email;
+  const userId = req.user!.id;
+  const userEmail = req.user!.email;
 
   const note = await NoteService.findNoteById(noteId);
   
@@ -31,7 +31,7 @@ export async function getNoteById(req: Request, res: Response) {
 
 export async function createNote(req: Request, res: Response) {
   const { title, content, color, isPinned, checkboxes } = req.body;
-  const userId = req.user.id;
+  const userId = req.user!.id;
 
   if (!isValidTitle(title)) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: ERROR_MESSAGES.INVALID_TITLE });
@@ -65,8 +65,8 @@ export async function createNote(req: Request, res: Response) {
 export async function updateNote(req: Request, res: Response) {
   const { title, content, color, isPinned, isShared, checkboxes } = req.body;
   const { id } = req.params;
-  const userId = req.user.id;
-  const userEmail = req.user.email;
+  const userId = req.user!.id;
+  const userEmail = req.user!.email;
 
   try {
     const existingNote = await NoteService.findNoteById(Number(id));
@@ -100,8 +100,8 @@ export async function updateNote(req: Request, res: Response) {
 
 export async function toggleNotePin(req: Request, res: Response) {
   const { id } = req.params;
-  const userId = req.user.id;
-  const userEmail = req.user.email;
+  const userId = req.user!.id;
+  const userEmail = req.user!.email;
 
   try {
     const existingNote = await NoteService.findNoteById(Number(id));
@@ -133,7 +133,7 @@ export async function toggleNotePin(req: Request, res: Response) {
 
 export async function deleteNote(req: Request, res: Response) {
   const { id } = req.params;
-  const userId = req.user.id;
+  const userId = req.user!.id;
   
   try {
     const existingNote = await NoteService.findNoteById(Number(id));
@@ -157,8 +157,8 @@ export async function deleteNote(req: Request, res: Response) {
 export async function updateCheckbox(req: Request, res: Response) {
   const { checkboxId } = req.params;
   const { checked } = req.body;
-  const userId = req.user.id;
-  const userEmail = req.user.email;
+  const userId = req.user!.id;
+  const userEmail = req.user!.email;
 
   try {
     // Vérifier que la checkbox appartient à une note accessible à l'utilisateur
@@ -191,7 +191,7 @@ export async function updateCheckbox(req: Request, res: Response) {
 
 export async function reorderNotes(req: Request, res: Response) {
   const { noteIds } = req.body;
-  const userId = req.user.id;
+  const userId = req.user!.id;
 
   if (!noteIds || !Array.isArray(noteIds) || noteIds.length === 0) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: "Liste d'IDs de notes requise" });

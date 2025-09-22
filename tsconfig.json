@@ -14,14 +14,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "resolveJsonModule": true,
-    "typeRoots": ["./types", "./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "include": [
-    "**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "coverage"
-  ]
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist", "coverage"]
 }

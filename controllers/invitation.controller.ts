@@ -10,7 +10,7 @@ export async function createInvitation(req: Request, res: Response) {
   try {
     const { noteId } = req.params;
     const { email, permission = InvitationPermission.READ, message, expiresInDays = 7 } = req.body;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     // Validation
     if (!email || !isValidEmail(email)) {
@@ -117,7 +117,7 @@ export async function getInvitationByToken(req: Request, res: Response) {
 export async function acceptInvitation(req: Request, res: Response) {
   try {
     const { token } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!token) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -158,7 +158,7 @@ export async function acceptInvitation(req: Request, res: Response) {
 export async function declineInvitation(req: Request, res: Response) {
   try {
     const { token } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!token) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -192,7 +192,7 @@ export async function declineInvitation(req: Request, res: Response) {
 
 export async function getPendingInvitations(req: Request, res: Response) {
   try {
-    const userEmail = req.user.email;
+    const userEmail = req.user!.email;
     const invitations = await InvitationService.getPendingInvitations(userEmail);
 
     res.json({
@@ -217,7 +217,7 @@ export async function getPendingInvitations(req: Request, res: Response) {
 
 export async function getSentInvitations(req: Request, res: Response) {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     const invitations = await InvitationService.getSentInvitations(userId);
 
     res.json({
@@ -244,7 +244,7 @@ export async function getSentInvitations(req: Request, res: Response) {
 export async function getNoteInvitations(req: Request, res: Response) {
   try {
     const { noteId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!noteId || isNaN(Number(noteId))) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -288,7 +288,7 @@ export async function getNoteInvitations(req: Request, res: Response) {
 export async function revokeInvitation(req: Request, res: Response) {
   try {
     const { invitationId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!invitationId || isNaN(Number(invitationId))) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -322,7 +322,7 @@ export async function revokeInvitation(req: Request, res: Response) {
 
 export async function getSharedNotes(req: Request, res: Response) {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     const sharedNotes = await InvitationService.getUserNotesWithAccess(userId);
 
     res.json({
@@ -348,7 +348,7 @@ export async function getSharedNotes(req: Request, res: Response) {
 export async function removeAccess(req: Request, res: Response) {
   try {
     const { noteId, userId: targetUserId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!noteId || isNaN(Number(noteId))) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -385,7 +385,7 @@ export async function removeAccess(req: Request, res: Response) {
 export async function leaveSharedNote(req: Request, res: Response) {
   try {
     const { noteId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     if (!noteId || isNaN(Number(noteId))) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -417,7 +417,7 @@ export async function leaveSharedNote(req: Request, res: Response) {
 
 export async function getInvitationStats(req: Request, res: Response) {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     const stats = await InvitationService.getInvitationStats(userId);
 
     res.json(stats);

@@ -32,7 +32,7 @@ export function errorHandler(
     statusCode,
     message,
     stack: process.env.NODE_ENV !== 'production' ? stack : undefined,
-    userId: req.user?.id,
+    userId: (req as any).user?.id,
     userAgent: req.get('user-agent'),
     ip: req.ip
   });
