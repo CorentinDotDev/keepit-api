@@ -66,6 +66,7 @@ export function notFoundHandler(req: Request, res: Response, next: NextFunction)
 
 // Gestionnaire global d'erreurs non catchées
 process.on('uncaughtException', (err: Error) => {
+  console.error('Erreur non catchée détaillée:', err);
   logger.error('Erreur non catchée', err);
   process.exit(1);
 });

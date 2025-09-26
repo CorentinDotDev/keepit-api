@@ -13,6 +13,7 @@ import webhookRoutes from "./routes/webhook.routes";
 import apiKeyRoutes from "./routes/apikey.routes";
 import templateRoutes from "./routes/template.routes";
 import invitationRoutes from "./routes/invitation.routes";
+import healthRoutes from "./routes/health.routes";
 
 dotenv.config();
 console.log("✅ Environment loaded");
@@ -36,6 +37,7 @@ app.use(
   })
 );
 
+app.use("/health", healthRoutes);
 app.use("/auth", authRoutes);
 app.use("/notes", noteRoutes);
 app.use("/webhooks", webhookRoutes);
@@ -50,10 +52,14 @@ app.get("/", (req, res) => {
       : `http://localhost:${PORT}`;
 
   res.json({
-    message: "Bienvenue sur l'API Notes",
+    message: "Bienvenue sur KeepIt API",
+    name: "KeepIt Server",
+    version: "1.1.0",
+    owner: "Corentin Lefort",
+    ownerEmail: "corentin@lefort.dev",
     documentation: `${baseUrl}/api-docs`,
+    health: `${baseUrl}/health`,
     environment: NODE_ENV,
-    version: "1.0.0",
   });
 });
 
