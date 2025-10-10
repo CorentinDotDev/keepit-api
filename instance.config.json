@@ -1,0 +1,37 @@
+{
+  "instanceId": "test-instance-001",
+  "instanceName": "KeepIt Test Instance",
+  "plan": "basic",
+  "limits": {
+    "maxUsers": 2,
+    "maxNotes": -1,
+    "maxApiCallsPerHour": 100,
+    "maxApiCallsPerDay": 1000,
+    "maxApiCallsPerMonth": 10000,
+    "maxStorageBytes": 1048576,
+    "maxWebhooks": 2,
+    "maxWebhooksPerUser": 2,
+    "maxTemplates": 20,
+    "maxTemplatesPerUser": 5,
+    "maxNotesPerUser": 50,
+    "maxApiKeys": 10,
+    "maxApiKeysPerUser": 3,
+    "rateLimitRequests": 60,
+    "rateLimitWindow": 60000
+  },
+  "features": {
+    "webhooksEnabled": true,
+    "templatesEnabled": true,
+    "sharingEnabled": false,
+    "apiKeysEnabled": true,
+    "customBrandingEnabled": false,
+    "advancedFeaturesEnabled": false
+  },
+  "branding": {
+    "name": "KeepIt Test"
+  },
+  "adminContact": {
+    "name": "Test Admin",
+    "email": "test@localhost"
+  }
+}

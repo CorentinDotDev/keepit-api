@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware";
+import { checkFeatureEnabled, checkApiKeysLimit } from "../middleware/limits.middleware";
 import { 
   createApiKey, 
   getApiKeys, 
@@ -73,7 +74,7 @@ const router = Router();
  *                       type: string
  *                       format: date-time
  */
-router.post("/", authenticate, createApiKey);
+router.post("/", authenticate, checkFeatureEnabled('apiKeysEnabled'), checkApiKeysLimit(), createApiKey);
 
 /**
  * @swagger
@@ -118,7 +119,7 @@ router.post("/", authenticate, createApiKey);
  *                         type: string
  *                         format: date-time
  */
-router.get("/", authenticate, getApiKeys);
+router.get("/", authenticate, checkFeatureEnabled('apiKeysEnabled'), getApiKeys);
 
 /**
  * @swagger
@@ -156,7 +157,7 @@ router.get("/", authenticate, getApiKeys);
  *                 error:
  *                   type: string
  */
-router.delete("/:keyId", authenticate, deleteApiKey);
+router.delete("/:keyId", authenticate, checkFeatureEnabled('apiKeysEnabled'), deleteApiKey);
 
 /**
  * @swagger
@@ -187,6 +188,6 @@ router.delete("/:keyId", authenticate, deleteApiKey);
  *                         type: string
  *                         description: Libellé lisible de la permission
  */
-router.get("/permissions", authenticate, getAvailablePermissions);
+router.get("/permissions", authenticate, checkFeatureEnabled('apiKeysEnabled'), getAvailablePermissions);
 
 export default router;

@@ -1,0 +1,41 @@
+{
+  "instanceId": "example-instance-001",
+  "instanceName": "KeepIt Pro Instance",
+  "plan": "pro",
+  "limits": {
+    "maxUsers": 25,
+    "maxNotes": 10000,
+    "maxApiCallsPerHour": 5000,
+    "maxApiCallsPerDay": 50000,
+    "maxApiCallsPerMonth": 1000000,
+    "maxStorageBytes": 10737418240,
+    "maxWebhooks": 10,
+    "maxTemplates": 200,
+    "maxNotesPerUser": 1000,
+    "maxFileSizeBytes": 10485760,
+    "allowInvitations": true,
+    "allowSharing": true,
+    "allowApiKeys": true,
+    "allowCustomBranding": true,
+    "allowAdvancedFeatures": false,
+    "rateLimitRequests": 300,
+    "rateLimitWindow": 60000
+  },
+  "features": {
+    "webhooksEnabled": true,
+    "templatesEnabled": true,
+    "invitationsEnabled": true,
+    "sharingEnabled": true,
+    "apiKeysEnabled": true,
+    "customBrandingEnabled": true,
+    "advancedFeaturesEnabled": false
+  },
+  "branding": {
+    "name": "My Company KeepIt",
+    "primaryColor": "#007bff"
+  },
+  "adminContact": {
+    "name": "John Doe",
+    "email": "admin@mycompany.com"
+  }
+}
