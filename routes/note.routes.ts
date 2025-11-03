@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticateJwtOrApiKey, requirePermission } from "../middleware/apikey.middleware";
 import { ApiKeyPermission } from "../services/apikey.service";
+import { checkNotesLimit, checkStorageLimit, checkFeatureEnabled } from "../middleware/limits.middleware";
 import {
   createNote,
   deleteNote,
@@ -470,7 +471,7 @@ const router = Router();
 
 router.get("/", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.READ_NOTES), getNotes);
 router.get("/:id", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.READ_NOTES), getNoteById);
-router.post("/", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.CREATE_NOTES), createNote);
+router.post("/", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.CREATE_NOTES), checkNotesLimit(), checkStorageLimit(), createNote);
 router.patch("/reorder", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.UPDATE_NOTES), reorderNotes);
 router.patch("/:id", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.UPDATE_NOTES), updateNote);
 router.patch("/:id/pin", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.UPDATE_NOTES), toggleNotePin);

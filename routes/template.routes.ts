@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware";
 import { authenticateJwtOrApiKey, requirePermission } from "../middleware/apikey.middleware";
 import { ApiKeyPermission } from "../services/apikey.service";
+import { checkTemplatesLimit, checkNotesLimit, checkFeatureEnabled } from "../middleware/limits.middleware";
 import {
   getTemplates,
   getTemplateById,
@@ -122,7 +123,7 @@ router.get("/:id", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.R
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.CREATE_TEMPLATES), createTemplate);
+router.post("/", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.CREATE_TEMPLATES), checkFeatureEnabled('templatesEnabled'), checkTemplatesLimit(), createTemplate);
 
 /**
  * @swagger
@@ -246,7 +247,7 @@ router.delete("/:id", authenticateJwtOrApiKey, requirePermission(ApiKeyPermissio
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/:templateId/use", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.USE_TEMPLATES), createNoteFromTemplate);
+router.post("/:templateId/use", authenticateJwtOrApiKey, requirePermission(ApiKeyPermission.USE_TEMPLATES), checkNotesLimit(), createNoteFromTemplate);
 
 /**
  * @swagger
@@ -278,7 +279,7 @@ router.post("/:templateId/use", authenticateJwtOrApiKey, requirePermission(ApiKe
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post("/convert/from-note/:noteId", authenticate, convertNoteToTemplate);
+router.post("/convert/from-note/:noteId", authenticate, checkFeatureEnabled('templatesEnabled'), checkTemplatesLimit(), convertNoteToTemplate);
 
 /**
  * @swagger

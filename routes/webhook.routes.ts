@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.middleware";
 import { addWebhook, getWebhooks, deleteWebhook } from "../controllers/webhook.controller";
+import { checkWebhooksLimit, checkFeatureEnabled } from "../middleware/limits.middleware";
 
 const router = Router();
 router.use(authenticate);
@@ -183,7 +184,7 @@ router.use(authenticate);
  */
 
 router.get("/", getWebhooks);
-router.post("/", addWebhook);
+router.post("/", checkFeatureEnabled('webhooksEnabled'), checkWebhooksLimit(), addWebhook);
 router.delete("/:id", deleteWebhook);
 
 export default router;

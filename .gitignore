@@ -70,7 +70,8 @@ coverage/
 *.temp
 
 # Prisma
-prisma/migrations/
+# Note: migrations should be committed to version control
+# prisma/migrations/ - DO NOT IGNORE
 
 # Claude Code
 .claude/
