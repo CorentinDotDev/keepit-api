@@ -16,5 +16,14 @@ README.md
 Dockerfile
 .dockerignore
 *.md
+!DATABASE.md
 .vscode
 .idea
+prisma/dev.db
+prisma/test.db
+*.db
+*.db-journal
+tests/
+data/
+logs/
+backups/

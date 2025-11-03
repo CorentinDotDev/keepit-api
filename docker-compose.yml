@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   express-notes-api:
-    image: registry.lefort.dev/express-notes-api:v1.5
+    image: registry.lefort.dev/express-notes-api:v1.6
     container_name: express-notes-api
     restart: unless-stopped
     ports:
@@ -11,7 +11,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - JWT_SECRET=${JWT_SECRET}
-      - DATABASE_URL=${DATABASE_URL:-file:./dev.db}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-notes_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-notes_db}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
     volumes:
@@ -26,7 +26,8 @@ services:
       retries: 3
       start_period: 40s
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:15-alpine
@@ -40,7 +41,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backups:/backups
     ports:
-      - "5432:5432"
+      - "5434:5432"
     networks:
       - notes-network
     healthcheck:

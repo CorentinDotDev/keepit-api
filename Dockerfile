@@ -11,11 +11,15 @@ RUN npm install
 # Copie tout le reste (src, prisma, etc.)
 COPY . .
 
-# Génère Prisma (optionnel si déjà fait en build)
+# Génère le client Prisma
 RUN npx prisma generate
 
 # Ouvre le port de ton API
 EXPOSE 3000
 
-# Commande de démarrage
+# Script de démarrage avec migration automatique
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["npm", "run", "start"]
