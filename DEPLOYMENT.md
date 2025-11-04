@@ -30,13 +30,7 @@ POSTGRES_DB=notes_db
 POSTGRES_USER=notes_user
 ```
 
-### 2. Build de l'image Docker
-
-```bash
-docker build -t registry.lefort.dev/express-notes-api:v1.6 .
-```
-
-### 3. Démarrage
+### 2. Démarrage
 
 ```bash
 docker-compose up -d
