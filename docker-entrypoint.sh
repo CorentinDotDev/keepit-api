@@ -1,11 +1,11 @@
 #!/bin/sh
 set -e
 
-echo "= Waiting for database to be ready..."
+echo "[INFO] Waiting for database to be ready..."
 sleep 5
 
-echo "=æ Running Prisma migrations..."
+echo "[INFO] Running Prisma migrations..."
 npx prisma migrate deploy
 
-echo " Database ready, starting application..."
+echo "[INFO] Database ready, starting application..."
 exec "$@"
